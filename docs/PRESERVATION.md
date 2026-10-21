@@ -14,11 +14,11 @@ The ZIP was restore-tested: unzipped to a clean directory, `npm ci`, typecheck, 
 
 Restore:
 ```bash
-git clone humans-vs-ai-m0-corrected-a65f405.bundle humans-vs-ai   # full history
+git clone -b claude/humans-vs-ai-plan-fz5yq0 <bundle-file> humans-vs-ai   # full history (the bundle has no default HEAD, so name the branch)
 # or: unzip humans-vs-ai-m0-corrected-a65f405.zip && cd humans-vs-ai
 npm ci && npm run check
 ```
 
 To fix GitHub: connect at https://claude.ai/connect-github and install the Claude GitHub App on `rajat4493/HumVAi` (or ask an organization owner). Then tell me and I will push the branch `claude/humans-vs-ai-plan-fz5yq0`.
 
-Documentation-only commits made after `a65f405` (this gate) are included in the newest archive named in `docs/M1-PREP-HANDOVER.md`.
+Newest archives (M1 preparation gate) are named `humans-vs-ai-m1prep-<commit>.zip/.bundle`; their SHA-256 values are in the delivery message and in `SHA256SUMS-m1prep.txt` beside them (a file cannot contain the hash of an archive that includes it). Both restore paths were tested: unzip → `npm ci` → 47 tests pass; bundle → `git clone -b claude/humans-vs-ai-plan-fz5yq0` → 3 commits.
