@@ -1,0 +1,45 @@
+/* Playful Futurism — design tokens. Initial values, not a finalized brand. */
+:root {
+  /* palette */
+  --midnight: #0b1026;
+  --midnight-2: #121a3d;
+  --canvas: #1b2552;
+  --canvas-2: #222d62;
+  --ink: #f4f1ff;
+  --ink-dim: #a9b0d6;
+  --human: #ffb347; /* sun amber */
+  --human-deep: #e07b1a;
+  --ai: #6f8cff; /* periwinkle */
+  --ai-deep: #4a5fe0;
+  --discovery: #b78cff; /* violet: movable things, new knowledge */
+  --exit: #5be38a;
+  --warn: #ff6b6b;
+  --switch-orange: #ff7a45;
+  --switch-teal: #2dd4bf;
+
+  /* surfaces */
+  --glass: rgb(255 255 255 / 0.06);
+  --glass-edge: rgb(255 255 255 / 0.14);
+  --shadow-soft: 0 18px 50px rgb(3 6 22 / 0.55);
+  --glow-human: 0 0 28px rgb(255 179 71 / 0.45);
+  --glow-ai: 0 0 28px rgb(111 140 255 / 0.5);
+
+  /* type */
+  --font-display: ui-rounded, 'SF Pro Rounded', 'Nunito', 'Avenir Next Rounded', 'Segoe UI Variable Display', system-ui, sans-serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* shape & motion */
+  --radius-lg: 22px;
+  --radius-md: 14px;
+  --ease-out: cubic-bezier(0.2, 0.9, 0.25, 1);
+  --dur-fast: 140ms;
+  --dur-med: 320ms;
+  --tap: 56px; /* minimum touch target for primary controls */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-med: 0ms;
+  }
+}

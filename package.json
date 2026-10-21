@@ -1,0 +1,35 @@
+{
+  "name": "humans-vs-ai",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "typecheck": "npm run typecheck --workspaces --if-present && tsc -p tests/tsconfig.json",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "build": "npm run build --workspace @hva/web",
+    "verify:levels": "npm run verify:levels --workspace @hva/game-core",
+    "test:e2e": "playwright test",
+    "screenshots": "playwright test --config playwright.config.ts tests/e2e/screenshots.spec.ts",
+    "check": "npm run typecheck && npm run lint && npm test && npm run verify:levels && npm run build"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@playwright/test": "1.56.1",
+    "@types/node": "^22.20.5",
+    "eslint": "9.39.5",
+    "eslint-plugin-react-hooks": "5.2.0",
+    "globals": "16.4.0",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.46.2",
+    "vitest": "3.2.7"
+  }
+}
