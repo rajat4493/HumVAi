@@ -2,12 +2,12 @@ import type { ChallengeDefinition } from '../types';
 
 export const level04: ChallengeDefinition = {
   id: 'w04-only-when',
-  version: 1,
+  version: 2,
   name: 'Only When',
-  briefing: 'The exit is behind a door. Three switches line the corridor. Not everything works all the time. You have 14 actions.',
+  briefing: 'The exit is behind a door. Three switches line the corridor. Not everything works all the time.',
   learning: 'An action can depend on the state of something else. Failure is information.',
   difficulty: 4,
-  budget: 14,
+  budget: { explore: 14, execute: 11 },
   map: [
     '##########',
     '#@.....DE#',

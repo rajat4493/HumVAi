@@ -2,12 +2,12 @@ import type { ChallengeDefinition } from '../types';
 
 export const level02: ChallengeDefinition = {
   id: 'w02-orange-switch',
-  version: 1,
+  version: 2,
   name: 'The Orange Switch',
-  briefing: 'The exit is behind a door. Two switches sit nearby. Find out what they do. You have 14 actions.',
+  briefing: 'The exit is behind a door. Two switches sit nearby. Find out what they do.',
   learning: 'Switches change the world; some switches matter and some do not.',
   difficulty: 2,
-  budget: 14,
+  budget: { explore: 16, execute: 12 },
   map: [
     '#########',
     '#@..#..E#',

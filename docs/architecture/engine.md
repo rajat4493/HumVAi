@@ -16,7 +16,7 @@ packages/game-core/
   src/solver.ts     BFS over the real transition function; dead-state analysis
   src/ascii.ts      text rendering of an observation (the AI-facing format)
   src/levels/       five handcrafted ChallengeDefinitions
-  test/             30 unit tests
+  test/             47 unit tests
   scripts/          verify-levels.ts → docs/verification/solvability-report.md
 apps/web/src/
   game/controller.ts   owns engine state; keyboard; Phaser lifecycle; subscribe() for React
@@ -32,10 +32,10 @@ tests/e2e/             smoke + screenshot specs
 ```ts
 create(challenge, seed): GameState                 // internal, contains hidden rules reference
 observe(state): PublicGameState                    // the ONLY thing a participant sees
-legalActions(state): GameAction[]                  // MOVE×4, adjacent INTERACTs, RESET
+legalActions(state): GameAction[]                  // MOVE×4, adjacent INTERACTs (switch toggle / block drag), RESET, COMMIT while scouting
 step(state, action): StepResult                    // mutates state in place, returns {state: public, events, valid, terminal}
 stepInternal(state, action): {next, result}        // pure version (solver, replay)
-evaluate(state): GameOutcome                       // status, won, actionsUsed, rejectedActions, finalStateHash
+evaluate(state): GameOutcome                       // status, won, scoutActions, runActions, rejectedActions, finalStateHash
 replay(challenge, actions, seed?): GameOutcome     // from scratch; flags actions after game end
 ```
 
@@ -53,6 +53,8 @@ Deviation from the plan's conceptual interface: `step` takes the *internal* stat
 | Security | **Not addressed in M0** (no server). Building block: server will call `replay()` and ignore client scores | — |
 
 ## Rule model
+
+**Budgets** are `{ explore, execute }` (Scout & Run, see `docs/product/budget-model.md`); the engine tracks `phase`, `scoutUsed`, `runUsed`, and resets the world on `COMMIT`. The solver analyses the run in isolation and also reports dead and irreversible states, and can prune the epoch change to prove a rule change is essential.
 
 A world has *signals* (switch ON/OFF, plate pressed) and *doors*. Each door has a boolean condition over signals (`on / not / and / or`). Optional hidden rules: `switchEnabled` (jammed switches), `switchInitiallyOn`, and `shift` (a tripwire that moves the world to epoch 1 and inverts every door condition). After every action the engine *settles*: recompute plates, then doors, emitting open/close/press/release events. New mechanics = new condition/effect types, not new special cases in `step`.
 

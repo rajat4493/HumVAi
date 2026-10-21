@@ -1,64 +1,69 @@
 import { create, legalActions, stepInternal, worldKey } from './engine';
-import type { ChallengeDefinition, GameAction } from './types';
+import type { ChallengeDefinition, GameAction, GameState } from './types';
+
+export interface SolveOptions {
+  maxStates?: number;
+  /** Prune every state where the world has changed epoch (answers: "can it be won while ignoring the rule change?"). */
+  stayInEpoch0?: boolean;
+}
 
 export interface SolveResult {
   solvable: boolean;
-  /** Fewest actions to win (RESET excluded: a reset never shortens a solution). */
+  /** Fewest run actions to win (RESET excluded: a reset never shortens a solution). */
   optimalLength: number | null;
   optimalSolution: GameAction[] | null;
   /** Number of distinct shortest action sequences. */
   optimalSolutionCount: number;
-  /** Win reachable within the declared budget? */
+  /** Win reachable within the declared run budget? */
   withinBudget: boolean;
-  statesExplored: number;
-  /** Distinct reachable states from which no win is possible (excluding the budget). */
-  deadStates: number;
+  /** Reachable non-winning world states (budget ignored). */
   reachableStates: number;
+  /** Reachable states from which no win exists at all; only RESET escapes them. */
+  deadStates: number;
+  /** Reachable states that can never return to the start without RESET (superset of dead). */
+  irreversibleStates: number;
+  /** Same counts restricted to states reachable within the run budget. */
+  reachableWithinBudget: number;
+  deadWithinBudget: number;
+  irreversibleWithinBudget: number;
 }
 
-/**
- * Breadth-first search over world states using the real engine transition function,
- * so "solvable" means "solvable by legal play", not "solvable by a separate model".
- */
-export function solve(challenge: ChallengeDefinition, maxStates = 500_000): SolveResult {
-  const start = create(challenge, 'solver');
-  // Budget is deliberately ignored so we can measure the true optimum and dead ends separately.
-  const unbounded = { ...challenge, budget: Number.MAX_SAFE_INTEGER };
-  const root = create(unbounded, 'solver');
+type Node = { state: GameState; depth: number; ways: number; parent: string | null; via: GameAction | null };
 
-  type Node = { state: typeof root; depth: number; ways: number; parent: string | null; via: GameAction | null };
-  const nodes = new Map<string, Node>();
-  const edges = new Map<string, string[]>();
+/**
+ * Exhaustive breadth-first search over world states using the real transition function,
+ * so "solvable" means "solvable by legal play", not "solvable by a separate model".
+ * The run phase is analysed in isolation (scouting only lets a participant learn the rules).
+ */
+export function solve(challenge: ChallengeDefinition, opts: SolveOptions = {}): SolveResult {
+  const maxStates = opts.maxStates ?? 500_000;
+  const runOnly: ChallengeDefinition = { ...challenge, budget: { explore: 0, execute: Number.MAX_SAFE_INTEGER } };
+  const root = create(runOnly, 'solver');
   const rootKey = worldKey(root);
-  nodes.set(rootKey, { state: root, depth: 0, ways: 1, parent: null, via: null });
+
+  const nodes = new Map<string, Node>([[rootKey, { state: root, depth: 0, ways: 1, parent: null, via: null }]]);
+  const edges = new Map<string, string[]>();
+  const wins = new Set<string>();
   let frontier = [rootKey];
-  let winKey: string | null = null;
-  let winDepth = Infinity;
-  let winWays = 0;
 
   while (frontier.length > 0 && nodes.size < maxStates) {
     const nextFrontier: string[] = [];
     for (const key of frontier) {
       const node = nodes.get(key) as Node;
-      if (node.depth >= winDepth) continue;
       const kids: string[] = [];
       for (const action of legalActions(node.state)) {
-        if (action.type === 'RESET') continue;
+        if (action.type === 'RESET' || action.type === 'COMMIT') continue;
         const { next } = stepInternal(node.state, action);
+        if (opts.stayInEpoch0 && next.epoch > 0) continue;
         const nk = worldKey(next);
         kids.push(nk);
         const known = nodes.get(nk);
         if (!known) {
           nodes.set(nk, { state: next, depth: node.depth + 1, ways: node.ways, parent: key, via: action });
-          nextFrontier.push(nk);
+          if (next.status === 'won') wins.add(nk);
+          else nextFrontier.push(nk);
         } else if (known.depth === node.depth + 1) {
           known.ways += node.ways;
-        }
-        if (next.status === 'won') {
-          if (node.depth + 1 < winDepth) {
-            winDepth = node.depth + 1;
-            winKey = nk;
-          }
         }
       }
       edges.set(key, kids);
@@ -66,67 +71,72 @@ export function solve(challenge: ChallengeDefinition, maxStates = 500_000): Solv
     frontier = nextFrontier;
   }
 
-  let winNode: Node | undefined = winKey ? nodes.get(winKey) : undefined;
-  if (winNode) winWays = winNode.ways;
-
-  const optimalSolution: GameAction[] | null = winNode ? [] : null;
-  while (winNode && winNode.parent !== null && winNode.via) {
-    optimalSolution?.unshift(winNode.via);
-    winNode = nodes.get(winNode.parent) as Node;
-  }
-
-  // Dead-state analysis: explore the full reachable graph (budget-free) and mark states that can reach a win.
-  const full = fullGraph(unbounded, maxStates);
-  const canWin = new Set<string>(full.wins);
-  let changed = true;
-  while (changed) {
-    changed = false;
-    for (const [k, kids] of full.edges) {
-      if (!canWin.has(k) && kids.some((c) => canWin.has(c))) {
-        canWin.add(k);
-        changed = true;
-      }
+  // Shortest win and one witness path.
+  let best: Node | undefined;
+  let bestKey: string | null = null;
+  for (const k of wins) {
+    const n = nodes.get(k) as Node;
+    if (!best || n.depth < best.depth) {
+      best = n;
+      bestKey = k;
     }
   }
-  const nonTerminal = [...full.edges.keys()].filter((k) => !full.wins.has(k));
-  const dead = nonTerminal.filter((k) => !canWin.has(k)).length;
+  const optimalLength = best ? best.depth : null;
+  const optimalWays = best && optimalLength !== null
+    ? [...wins].filter((k) => (nodes.get(k) as Node).depth === optimalLength).reduce((a, k) => a + (nodes.get(k) as Node).ways, 0)
+    : 0;
+  const optimalSolution: GameAction[] | null = best ? [] : null;
+  let cur: Node | undefined = bestKey ? nodes.get(bestKey) : undefined;
+  while (cur && cur.parent !== null && cur.via) {
+    optimalSolution?.unshift(cur.via);
+    cur = nodes.get(cur.parent);
+  }
 
-  const optimalLength = winKey ? winDepth : null;
-  void start;
+  // Dead = cannot reach any win. Irreversible = cannot reach the start again (without RESET).
+  const reverse = new Map<string, string[]>();
+  for (const [from, tos] of edges) for (const to of tos) (reverse.get(to) ?? reverse.set(to, []).get(to) as string[]).push(from);
+  const closure = (seeds: Iterable<string>): Set<string> => {
+    const seen = new Set<string>(seeds);
+    const stack = [...seen];
+    while (stack.length > 0) {
+      for (const p of reverse.get(stack.pop() as string) ?? []) {
+        if (seen.has(p)) continue;
+        seen.add(p);
+        stack.push(p);
+      }
+    }
+    return seen;
+  };
+  const canWin = closure(wins);
+  const canReturn = closure([rootKey]);
+
+  const budget = challenge.budget.execute;
+  let reachable = 0, dead = 0, irreversible = 0, reachableB = 0, deadB = 0, irreversibleB = 0;
+  for (const [k, n] of nodes) {
+    if (wins.has(k)) continue;
+    const isDead = !canWin.has(k);
+    const isIrr = !canReturn.has(k);
+    reachable++;
+    if (isDead) dead++;
+    if (isIrr) irreversible++;
+    if (n.depth <= budget) {
+      reachableB++;
+      if (isDead) deadB++;
+      if (isIrr) irreversibleB++;
+    }
+  }
+
   return {
     solvable: optimalLength !== null,
     optimalLength,
     optimalSolution,
-    optimalSolutionCount: winWays,
-    withinBudget: optimalLength !== null && optimalLength <= challenge.budget,
-    statesExplored: nodes.size,
+    optimalSolutionCount: optimalWays,
+    withinBudget: optimalLength !== null && optimalLength <= budget,
+    reachableStates: reachable,
     deadStates: dead,
-    reachableStates: full.edges.size + full.wins.size,
+    irreversibleStates: irreversible,
+    reachableWithinBudget: reachableB,
+    deadWithinBudget: deadB,
+    irreversibleWithinBudget: irreversibleB,
   };
-}
-
-function fullGraph(challenge: ChallengeDefinition, maxStates: number) {
-  const root = create(challenge, 'solver');
-  const seen = new Map<string, typeof root>([[worldKey(root), root]]);
-  const edges = new Map<string, string[]>();
-  const wins = new Set<string>();
-  const queue = [worldKey(root)];
-  while (queue.length > 0 && seen.size < maxStates) {
-    const key = queue.pop() as string;
-    const state = seen.get(key) as typeof root;
-    const kids: string[] = [];
-    for (const action of legalActions(state)) {
-      if (action.type === 'RESET') continue;
-      const { next } = stepInternal(state, action);
-      const nk = worldKey(next);
-      kids.push(nk);
-      if (next.status === 'won') wins.add(nk);
-      else if (!seen.has(nk)) {
-        seen.set(nk, next);
-        queue.push(nk);
-      }
-    }
-    edges.set(key, kids);
-  }
-  return { edges, wins };
 }

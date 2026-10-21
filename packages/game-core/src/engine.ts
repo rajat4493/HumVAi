@@ -46,11 +46,11 @@ export function worldKey(s: GameState): string {
     .sort()
     .map((id) => `${id}=${s.switches[id] ? 1 : 0}`)
     .join(';');
-  return `p${s.player.x},${s.player.y}|${blocks}|${sw}|e${s.epoch}|t${[...s.tripwiresSpent].sort().join(',')}|${s.status}`;
+  return `p${s.player.x},${s.player.y}|${blocks}|${sw}|e${s.epoch}|t${[...s.tripwiresSpent].sort().join(',')}|${s.phase}|${s.status}`;
 }
 
 export function stateHash(s: GameState): string {
-  return hashString(`${s.challenge.id}:${s.challenge.version}:${s.seed}:${worldKey(s)}:${s.actionsUsed}:${s.rejectedActions}`);
+  return hashString(`${s.challenge.id}:${s.challenge.version}:${s.seed}:${worldKey(s)}:${s.scoutUsed}:${s.runUsed}:${s.rejectedActions}`);
 }
 
 function clone(s: GameState): GameState {
@@ -79,6 +79,8 @@ function evalCond(s: GameState, c: Cond): boolean {
       return c.args.every((a) => evalCond(s, a));
     case 'or':
       return c.args.some((a) => evalCond(s, a));
+    case 'const':
+      return c.value;
   }
 }
 
@@ -98,8 +100,8 @@ function settle(s: GameState): GameEvent[] {
 
   for (const e of world.entities) {
     if (e.kind !== 'door') continue;
-    const base = evalCond(s, s.challenge.rules.doors[e.id] as Cond);
-    const open = s.epoch % 2 === 1 ? !base : base;
+    const shifted = s.epoch >= 1 ? s.challenge.rules.shift?.doors[e.id] : undefined;
+    const open = evalCond(s, shifted ?? (s.challenge.rules.doors[e.id] as Cond));
     if (open !== (s.doorsOpen[e.id] ?? false)) {
       events.push({ type: open ? 'DOOR_OPENED' : 'DOOR_CLOSED', id: e.id });
     }
@@ -133,7 +135,9 @@ function initialState(challenge: ChallengeDefinition, seed: string): GameState {
     platesPressed: {},
     tripwiresSpent: [],
     epoch: 0,
-    actionsUsed: 0,
+    phase: challenge.budget.explore > 0 ? 'explore' : 'execute',
+    scoutUsed: 0,
+    runUsed: 0,
     rejectedActions: 0,
     status: 'playing',
   };
@@ -171,6 +175,11 @@ function blockCanEnter(s: GameState, p: Pos, selfId: string): boolean {
   return true;
 }
 
+const spend = (s: GameState): void => {
+  if (s.phase === 'explore') s.scoutUsed += 1;
+  else s.runUsed += 1;
+};
+
 function reject(s: GameState, reason: string): { next: GameState; result: Omit<StepResult, 'state'> } {
   const next = clone(s);
   next.rejectedActions += 1;
@@ -184,7 +193,11 @@ export function legalActions(s: GameState): GameAction[] {
   for (const e of world.entities) {
     if (e.kind === 'switch' && adjacent(s.player, e.pos)) out.push({ type: 'INTERACT', targetId: e.id });
   }
+  for (const [id, pos] of Object.entries(s.blocks)) {
+    if (adjacent(s.player, pos)) out.push({ type: 'INTERACT', targetId: id });
+  }
   out.push({ type: 'RESET' });
+  if (s.phase === 'explore') out.push({ type: 'COMMIT' });
   return out;
 }
 
@@ -211,7 +224,7 @@ export function stepInternal(s: GameState, action: GameAction): { next: GameStat
         const r = reject(s, 'unknown direction');
         return wrap(r.next, r.result.events, false);
       }
-      next.actionsUsed += 1;
+      spend(next);
       const target = add(next.player, d);
       const bumped = playerObstacle(next, target);
       const blockEntry = Object.entries(next.blocks).find(([, b]) => eq(b, target));
@@ -238,12 +251,33 @@ export function stepInternal(s: GameState, action: GameAction): { next: GameStat
     }
 
     case 'INTERACT': {
+      const block = next.blocks[action.targetId];
+      if (block && adjacent(next.player, block)) {
+        // Drag: the player steps directly away from the block and the block follows into the vacated tile.
+        spend(next);
+        const toward = { x: block.x - next.player.x, y: block.y - next.player.y };
+        const back = { x: next.player.x - toward.x, y: next.player.y - toward.y };
+        const here = next.player;
+        if (playerObstacle(next, back) === null && !Object.values(next.blocks).some((b) => eq(b, back))) {
+          next.player = back;
+          if (blockCanEnter(next, here, action.targetId)) {
+            next.blocks[action.targetId] = { ...here };
+            events.push({ type: 'PULLED', id: action.targetId, from: block, to: here }, { type: 'MOVED', from: here, to: back });
+          } else {
+            next.player = here;
+            events.push({ type: 'NO_EFFECT', targetId: action.targetId });
+          }
+        } else {
+          events.push({ type: 'NO_EFFECT', targetId: action.targetId });
+        }
+        break;
+      }
       const sw = world.entities.find((e) => e.kind === 'switch' && e.id === action.targetId);
       if (!sw || !adjacent(next.player, sw.pos)) {
         const r = reject(s, 'no interactable target adjacent');
         return wrap(r.next, r.result.events, false);
       }
-      next.actionsUsed += 1;
+      spend(next);
       const gate = next.challenge.rules.switchEnabled?.[sw.id];
       if (gate && !evalCond(next, gate)) {
         events.push({ type: 'NO_EFFECT', targetId: sw.id });
@@ -256,12 +290,24 @@ export function stepInternal(s: GameState, action: GameAction): { next: GameStat
     }
 
     case 'RESET': {
-      // Restores the world, NOT the budget: resetting is a costed action.
+      // Restores the world, NOT the budget. Free while scouting, one action in the run.
       const fresh = initialState(s.challenge, s.seed);
-      fresh.actionsUsed = s.actionsUsed + 1;
+      fresh.phase = s.phase;
+      fresh.scoutUsed = s.scoutUsed;
+      fresh.runUsed = s.runUsed;
       fresh.rejectedActions = s.rejectedActions;
+      if (s.phase === 'execute') fresh.runUsed += 1;
       events.push({ type: 'RESET' });
       return finish(fresh, events, wrap);
+    }
+
+    case 'COMMIT': {
+      if (s.phase !== 'explore') {
+        const r = reject(s, 'nothing to commit: the run has already started');
+        return wrap(r.next, r.result.events, false);
+      }
+      events.push(...beginRun(next, 'player'));
+      return wrap(next, events, true);
     }
 
     default: {
@@ -274,16 +320,28 @@ export function stepInternal(s: GameState, action: GameAction): { next: GameStat
   return finish(next, events, wrap);
 }
 
+/** Ends scouting: world back to its start, run counters at zero, scouting spend remembered. */
+function beginRun(s: GameState, reason: 'player' | 'exit-found' | 'scout-spent'): GameEvent[] {
+  const fresh = initialState(s.challenge, s.seed);
+  Object.assign(s, fresh, { phase: 'execute', scoutUsed: s.scoutUsed, runUsed: 0, rejectedActions: s.rejectedActions });
+  return [{ type: 'COMMITTED', reason }];
+}
+
 function finish(
   next: GameState,
   events: GameEvent[],
   wrap: (n: GameState, e: GameEvent[], v: boolean) => { next: GameState; result: StepResult },
 ) {
   const world = parseWorld(next.challenge);
-  if (eq(next.player, world.exit)) {
+  const atExit = eq(next.player, world.exit);
+  if (next.phase === 'explore') {
+    // Scouting can never win. Finding the exit, or running out of scouting actions, starts the run.
+    if (atExit) events.push(...beginRun(next, 'exit-found'));
+    else if (next.scoutUsed >= next.challenge.budget.explore) events.push(...beginRun(next, 'scout-spent'));
+  } else if (atExit) {
     next.status = 'won';
     events.push({ type: 'WON' });
-  } else if (next.actionsUsed >= next.challenge.budget) {
+  } else if (next.runUsed >= next.challenge.budget.execute) {
     next.status = 'lost';
     events.push({ type: 'LOST' });
   }
@@ -315,9 +373,13 @@ export function observe(s: GameState): PublicGameState {
     player: { ...s.player },
     exit: { ...world.exit },
     entities,
-    budget: s.challenge.budget,
-    actionsUsed: s.actionsUsed,
-    actionsRemaining: Math.max(0, s.challenge.budget - s.actionsUsed),
+    phase: s.phase,
+    scout: { budget: s.challenge.budget.explore, used: s.scoutUsed },
+    run: { budget: s.challenge.budget.execute, used: s.runUsed },
+    actionsRemaining:
+      s.phase === 'explore'
+        ? Math.max(0, s.challenge.budget.explore - s.scoutUsed)
+        : Math.max(0, s.challenge.budget.execute - s.runUsed),
     epoch: s.epoch,
     status: s.status,
   };
@@ -327,7 +389,8 @@ export function evaluate(s: GameState): GameOutcome {
   return {
     status: s.status,
     won: s.status === 'won',
-    actionsUsed: s.actionsUsed,
+    scoutActions: s.scoutUsed,
+    runActions: s.runUsed,
     rejectedActions: s.rejectedActions,
     finalStateHash: stateHash(s),
     extraActions: false,

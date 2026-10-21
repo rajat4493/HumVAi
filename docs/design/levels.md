@@ -7,18 +7,21 @@ Everything here is implemented in `packages/game-core/src/levels/*.ts` and machi
 
 **Grid.** Orthogonal, tile-based. Coordinates are `(x, y)` with `(0,0)` top-left. Every map is fully enclosed by walls.
 
+**Budget model: Scout & Run** (`docs/product/budget-model.md`). Each world has a Scout budget `E` (a sandbox where nothing can win or lose; `RESET` is free) and a Run budget `X` (the strict, scored attempt on a fresh world). Scouting ends on `COMMIT`, on reaching the exit, or when `E` is spent; the world then resets and the run begins. Worlds with `E = 0` start directly in the run.
+
 **Actions** (identical for human and AI):
 
 | Action | Effect | Costs budget? |
 |---|---|---|
-| `MOVE up/down/left/right` | Move one tile. Walking into a wall, closed door or switch is a no-op *bump*. Walking into a block pushes it one tile if the tile behind it is floor/plate/tripwire (not wall, door, switch, exit, other block). | **Yes**, even when bumped |
-| `INTERACT targetId` | Toggle a switch that is orthogonally adjacent. Anything else is rejected. | **Yes** when accepted |
-| `RESET` | Restore the world to its start. Budget is **not** restored. | **Yes** (1) |
-| Rejected action (non-adjacent/unknown target, anything after game end) | `valid:false`, world unchanged | No, but counted in `rejectedActions` |
+| `MOVE up/down/left/right` | Move one tile. Walking into a wall, closed door or switch is a no-op *bump*. Walking into a block pushes it one tile if the tile behind it is floor/plate/tripwire (not wall, door, switch, exit, other block). | Yes, even when bumped |
+| `INTERACT switchId` | Toggle an orthogonally adjacent switch. | Yes |
+| `INTERACT blockId` | **Drag**: with the block orthogonally adjacent, the player steps directly away and the block follows into the vacated tile. If there is no room, `NO_EFFECT`. | Yes |
+| `RESET` | Restore the world to its start; budgets are not restored. | Free in Scout; 1 action in the Run |
+| `COMMIT` | End scouting, start the run (Scout only). | Free |
+| Rejected action (non-adjacent/unknown target, `COMMIT` in the run, anything after game end) | `valid:false`, world unchanged | No, but counted in `rejectedActions` |
 
-**Win:** the player stands on the exit tile. Checked before the budget, so winning on the last action is a win.
-**Lose:** `actionsUsed >= budget` without winning.
-**Doors:** a door the player is standing in stays passable for them; doors block *entry* only. Blocks can never be pushed onto doors.
+**Win:** the player stands on the exit tile **during the run** (checked before the budget, so winning on the last action is a win). Reaching the exit while scouting starts the run instead. **Lose:** `X` run actions spent without winning.
+**Doors:** a door the player is standing in stays passable for them; doors block *entry* only. Blocks can never be pushed or dragged onto doors.
 **Plates:** pressed while the player *or a block* is on them. **Tripwires:** fire once when the player or a block first enters.
 **Determinism:** same level + same action list ⇒ identical outcome and identical `finalStateHash`.
 
@@ -27,33 +30,34 @@ Everything here is implemented in `packages/game-core/src/levels/*.ts` and machi
 **AI observation format.** The AI receives `PublicGameState` (JSON) and/or its ASCII rendering plus the list of legal actions, and replies with one `GameAction`. ASCII legend: `#` wall · `.` floor · `@` you · `E` exit · `B` block · `D`/`d` door closed/open · `s`/`S` switch off/on · `P`/`p` plate idle/pressed · `W`/`w` tripwire armed/spent. Below each map the observation lists entities as `id=kind(state)@x,y` and a status line `actions used/budget epoch status`. JSON example (level 2, start):
 
 ```json
-{ "challengeId": "w02-orange-switch", "version": 1, "width": 9, "height": 5,
+{ "challengeId": "w02-orange-switch", "version": 2, "width": 9, "height": 5,
   "tiles": ["#########","#...#...#","#.......#","#...#...#","#########"],
   "player": {"x":1,"y":1}, "exit": {"x":7,"y":1},
   "entities": [
     {"id":"switch-orange","kind":"switch","pos":{"x":2,"y":2},"state":"off"},
     {"id":"door-garden","kind":"door","pos":{"x":4,"y":2},"state":"closed"},
     {"id":"switch-teal","kind":"switch","pos":{"x":2,"y":3},"state":"off"} ],
-  "budget": 14, "actionsUsed": 0, "actionsRemaining": 14, "epoch": 0, "status": "playing" }
+  "phase": "explore", "scout": {"budget": 16, "used": 0}, "run": {"budget": 12, "used": 0},
+  "actionsRemaining": 16, "epoch": 0, "status": "playing" }
 ```
 
 (`tiles` shows only walls/floor; doors are listed as entities, and door tiles appear as `.` there.)
 
-**Event feedback** (also what drives animation): `MOVED, BLOCKED(reason), PUSHED, SWITCH_TOGGLED, NO_EFFECT, DOOR_OPENED/CLOSED, PLATE_PRESSED/RELEASED, EPOCH_CHANGED, RESET, WON, LOST, REJECTED`. `NO_EFFECT` deliberately gives no reason.
+**Event feedback** (also what drives animation): `MOVED, BLOCKED(reason), PUSHED, PULLED, SWITCH_TOGGLED, NO_EFFECT, DOOR_OPENED/CLOSED, PLATE_PRESSED/RELEASED, EPOCH_CHANGED, RESET, COMMITTED(reason), WON, LOST, REJECTED`. `NO_EFFECT` deliberately gives no reason.
 
-**Level IDs are versioned.** Changing a map or rule must bump `version`; old results then refer to the old definition.
+**Level IDs are versioned.** Changing a map, rule or budget must bump `version`; old results then refer to the old definition. (M0 review: Worlds 1–4 moved to v2 because the budget model changed; World 5 moved to v2 because its rules changed.)
 
 ---
 
-## Level 1 — First Steps (`w01-first-steps`, v1)
+## Level 1 — First Steps (`w01-first-steps`, v2)
 
 | | |
 |---|---|
 | **Learning objective** | Movement, walls, "every action spends budget" |
 | **Difficulty** | 1 / 5 |
-| **Budget** | 12 actions (optimal 8, slack 4) |
+| **Budget** | Scout 0 · Run 12 (optimal 8, slack 4). Nothing hidden, so no scouting |
 | **Objective** | Reach the glowing exit |
-| **Briefing** | "Reach the glowing exit. Walls block the way. You have 12 actions." |
+| **Briefing** | "Reach the glowing exit. Walls block the way." |
 
 ```
 #######
@@ -66,19 +70,19 @@ Everything here is implemented in `packages/game-core/src/levels/*.ts` and machi
 - **Visible rules:** walls block; budget.  **Hidden rules:** none (deliberate — onboarding).
 - **Intended solution (8):** `R R D D R R U U`. The left column and the (1,2)–(1,3) pocket are dead ends.
 - **Alternative solutions:** no other optimal route (1 distinct). Longer routes exist by wasting ≤4 actions (bumps, back-and-forth).
-- **Failure:** 12 actions without reaching the exit.
-- **Reachable states:** 11. **Dead states:** 0.
+- **Failure:** 12 run actions without reaching the exit.
+- **Reachable states:** 10. **Dead:** 0.
 - **Visual/animation:** exit pulses and slowly rotates; player squashes on each step; wall bump = 9 px nudge; win = confetti burst from the exit + player pulse.
 
-## Level 2 — The Orange Switch (`w02-orange-switch`, v1)
+## Level 2 — The Orange Switch (`w02-orange-switch`, v2)
 
 | | |
 |---|---|
 | **Learning objective** | Switches change the world; some do not matter |
 | **Difficulty** | 2 / 5 |
-| **Budget** | 14 (optimal 9, slack 5) |
+| **Budget** | Scout 16 · Run 12 (optimal 9, slack 3) |
 | **Objective** | Reach the exit behind the door |
-| **Briefing** | "The exit is behind a door. Two switches sit nearby. Find out what they do. You have 14 actions." |
+| **Briefing** | "The exit is behind a door. Two switches sit nearby. Find out what they do." |
 
 ```
 #########
@@ -91,20 +95,20 @@ Everything here is implemented in `packages/game-core/src/levels/*.ts` and machi
 - **Visible:** a locked door, two switches (different shape *and* colour), both start OFF.
 - **Hidden:** `door-garden` is open iff `switch-orange` is ON. `switch-teal` is a decoy: it toggles visibly and does nothing else.
 - **Intended solution (9):** `R R D [orange] R R U R R` (reach a tile beside the orange switch, toggle it, walk through).
-- **Alternatives:** 6 distinct optimal sequences (toggle from (2,1), (1,2) or (3,2); the post-door walk can turn up at three points). Exploring the decoy first costs 12 of 14 actions (verified by test), so one honest experiment is affordable.
+- **Alternatives:** 6 distinct optimal sequences (toggle from (2,1), (1,2) or (3,2); the post-door walk can turn up at three points). Testing the decoy first costs 12 actions: affordable even in a strict run (verified), and free of consequence in Scout.
 - **Failure:** budget exhausted; or toggling orange twice (door closes again).
-- **Reachable states:** 48. **Dead states:** 0 (switches are reversible).
+- **Reachable states:** 46. **Dead:** 0. **Irreversible:** 0 (switches are reversible).
 - **Visual/animation:** switch lights up and pulses; door panel swaps to an open frame with a green glow and pulses. Decoy toggles with the same animation so it is *not* distinguishable by feedback alone.
 
-## Level 3 — The Locked Garden (`w03-locked-garden`, v1)
+## Level 3 — The Locked Garden (`w03-locked-garden`, v2) — *revised after M0 review*
 
 | | |
 |---|---|
-| **Learning objective** | Objects can do what the player cannot: hold a plate while you walk away |
+| **Learning objective** | Objects can do what the player cannot: hold a plate while you walk away. Mistakes are recoverable |
 | **Difficulty** | 3 / 5 |
-| **Budget** | 16 (optimal 10, slack 6) — matches the plan's "10 moves" example |
+| **Budget** | Scout 24 · Run 14 (optimal 10, slack 4). Matches the plan's "10 moves" example |
 | **Objective** | Reach the exit behind the door |
-| **Briefing** | "The exit is behind a door. The purple block can be moved. Discover how the world works. You have 16 actions." |
+| **Briefing** | "The exit is behind a door. The purple block can be pushed, and dragged with Interact. Discover how the world works." |
 
 ```
 #########
@@ -114,23 +118,25 @@ Everything here is implemented in `packages/game-core/src/levels/*.ts` and machi
 #########
 ```
 
-- **Visible:** a plate, a door, a pushable block (four-arrow glyph).
-- **Hidden:** `door-garden` is open iff `plate-garden` is pressed. The block counts as a press; the player does too, but cannot be in two places.
+- **What changed and why.** The M0 version let a block be pushed into a corner or against a wall for good: **137 of 178 reachable states (77%) were dead** and only a costed RESET recovered. The map is unchanged, but the block can now also be **dragged** (`INTERACT` on an adjacent block: the player steps back, the block follows). A block against a wall or in a corner can always be pulled back out along the open side, so the pushing mistakes that used to be fatal are now just moves.
+- **Result (exhaustive search):** 183 reachable states, **0 dead, 0 irreversible** (every state can still reach the exit *and* return to the start without RESET). Optimal is still 10 with 1 distinct optimal sequence, so the puzzle did not get easier to solve, only safer to explore.
+- **Visible:** a plate, a door, a pushable block (four-arrow glyph); the briefing says the block can be pushed and dragged.
+- **Hidden:** `door-garden` is open iff `plate-garden` is pressed. The block counts as a press; the player does too, but cannot be in two places. The block is still required (without it the exit cannot be reached; tested).
 - **Intended solution (10):** `D R R U R R R R D D` — push the block right twice onto the plate, step up, walk the corridor, through the door.
-- **Alternatives:** 1 distinct optimal. Non-optimal: push the block down/up first (wasteful), step on the plate to learn that it opens the door (costs ~4 extra, affordable).
-- **Failure:** budget exhausted; or an *unrecoverable block* (pushed into a corner or against the wall) — only `RESET` (cost 1) recovers, and a mistake made after action 5 can no longer be recovered within 16.
-- **Reachable states:** 178. **Dead states:** 137 (the block can be stranded in many ways — see audit risk G3).
-- **Visual/animation:** block slides 140 ms; plate depresses and turns green when pressed; door opens with glow. Plate must read as "press here" (chevron) without colour.
+- **Alternatives:** 1 distinct optimal. Non-optimal: step on the plate to see the door open (a few extra actions), push the block somewhere wasteful and drag it back.
+- **Recovery paths:** block against the top wall → drag it down (`INTERACT`); block stuck on the plate when you wanted it off → drag; anything else → `RESET`, free in Scout.
+- **Failure:** run budget exhausted.
+- **Visual/animation:** block slides 140 ms on push and drag; plate depresses and turns green when pressed; door opens with glow. The plate reads as "press here" (chevron) without colour.
 
-## Level 4 — Only When (`w04-only-when`, v1)
+## Level 4 — Only When (`w04-only-when`, v2)
 
 | | |
 |---|---|
 | **Learning objective** | An action can depend on the state of something else; failure is information |
 | **Difficulty** | 4 / 5 |
-| **Budget** | 14 (optimal 9, slack 5) |
+| **Budget** | Scout 14 · Run 11 (optimal 9, slack 2) |
 | **Objective** | Reach the exit behind the door |
-| **Briefing** | "The exit is behind a door. Three switches line the corridor. Not everything works all the time. You have 14 actions." |
+| **Briefing** | "The exit is behind a door. Three switches line the corridor. Not everything works all the time." |
 
 ```
 ##########
@@ -146,38 +152,42 @@ Everything here is implemented in `packages/game-core/src/levels/*.ts` and machi
 - **Intended solution (9):** `R [circle] R R R R [triangle] R R` (switch the circle off to un-jam the triangle, then turn the triangle on).
 - **Alternatives:** 1 distinct optimal. Testing the square costs ≥2 extra actions and, if left ON, closes the door (must toggle back).
 - **Failure:** budget exhausted; giving up on the triangle after a `NO_EFFECT`; leaving the square ON.
-- **Reachable states:** 76. **Dead states:** 0.
+- **Reachable states:** 74. **Dead:** 0.
 - **Visual/animation:** a jammed switch shakes (3 × 5 px) and does **not** change appearance; no text explains why. This is the "failure is information" beat.
 
-## Level 5 — The Garden Shifts (`w05-garden-shifts`, v1)
+## Level 5 — The Garden Shifts (`w05-garden-shifts`, v2) — *rebuilt after M0 review*
 
 | | |
 |---|---|
-| **Learning objective** | The world can change its rules; a good strategy notices and adapts |
+| **Learning objective** | The world can change its rules; what you learned about a switch may stop (or start) being true |
 | **Difficulty** | 5 / 5 |
-| **Budget** | 22 (optimal 10, slack 12) |
+| **Budget** | Scout 20 · Run 16 (optimal 13, slack 3) |
 | **Objective** | Reach the exit through two doors |
-| **Briefing** | "Two doors, two switches. What you learn may not stay true. You have 22 actions." |
+| **Briefing** | "Two doors, two switches, and a strange rune. What you learn may not stay true." |
 
 ```
 ############
-#@..D..W.DE#   start (1,1)  D = door-gate (4,1)  W = tripwire-tide (7,1)  F = door-far (9,1)  exit (10,1)
-#.s.#s.#####   s = switch-one (2,2) ● orange circle ; switch-two (5,2) ◆ blue diamond
+#@..D....FE#   start (1,1)  D = door-gate (4,1)  F = door-far (9,1)  exit (10,1)
+#.a.#.w.b###   a = switch-one (2,2) ● orange circle ; w = tripwire-tide (6,2) rune ; b = switch-two (8,2) ◆ blue diamond
 ############
 ```
 
-- **Visible:** two doors, two switches, a glowing rune tile (tripwire) between them. Both switches start OFF.
-- **Hidden:** Phase 0 — `door-gate` open iff `switch-one` ON; `door-far` open iff `switch-two` ON. The first time anything enters the tripwire, the world enters **phase 1** and *every door rule is inverted* (open iff the signal is OFF). The shift is announced only by a visible cue (`epoch` becomes 1; the floor tints violet and the screen flashes), never explained.
-- **Intended solution (10):** `R [one] R R R R R R R R` — open the gate, walk on; the tripwire inverts the far door, which opens by itself because `switch-two` is OFF.
-- **Naive-but-valid path (18, verified):** also turn `switch-two` ON in phase 0 (as level 2 taught), trip the wire, watch the far door slam shut, walk back, turn it OFF, return. Still inside 22.
-- **Alternatives:** 1 distinct optimal. After the shift, `door-gate` closes behind the player; there is no way back through it, which is harmless because the level is forward-only.
-- **Failure:** budget exhausted (e.g. repeatedly bumping the closed far door).
-- **Reachable states:** 40. **Dead states:** 0.
-- **Visual/animation:** tripwire pulses while armed and dims when spent; on shift: camera flash, floor tint, door textures re-evaluate. Reduced-motion: no flash, tint only.
-- **Known weakness:** a player who never touches `switch-two` completes it without noticing the shift (audit risk G4).
+- **What changed and why.** In M0 the rule change was optional: a player who never touched `switch-two` simply walked through (audit risk G4). Now the far door is **sealed** in the world's first epoch (nothing opens it) and the rune rewires it to `switch-two`. The change is the only way out.
+- **Visible:** a gate door, a far door, two switches, a glowing optional-looking rune in a side nook. Both switches start OFF.
+- **Hidden:** Epoch 0: `door-gate` open iff `switch-one` ON; `door-far` can never open (`switch-two` toggles but does nothing: it looks like the decoy from World 2). The first time the player or a block enters the rune: **epoch 1** — `door-far` now opens iff `switch-two` is ON. The change is announced only by a cue (floor turns violet, frame glows, screen flash, toast "The world just changed"), never explained.
+- **Intended solution (13):** `R [one] R R R D R U R R [two] R R` — open the gate, step on the rune, then switch on `switch-two` (now it works), walk through the far door. 6 distinct optimal sequences (order of detour and toggle).
+- **Why the rule change is essential (proved, tested):**
+  1. Exhaustive search with every epoch-1 state pruned finds **no winning sequence**: any strategy that ignores the change cannot succeed.
+  2. Every winning line has the epoch change before the win.
+  3. The "learned" strategy (open the gate, toggle `switch-two` beside the far door, walk through) fails and loses by budget.
+  4. Toggling `switch-two` *before* the rune still works (the switch state carries over) but costs 17 actions; the strict run allows 16. Understanding the order matters under the Run budget, and Scout allows the experiment.
+- **Failure:** run budget exhausted; bumping the sealed door forever.
+- **Reachable states:** 71. **Dead:** 0. **Irreversible:** 37 (the rune cannot be un-stepped; the level is forward-only by design).
+- **Visual/animation:** rune pulses while armed and dims when spent; on the change: camera flash, floor re-tints violet, frame glows violet, toast. Reduced motion: no flash/pulse; the tint and toast remain.
+- **Known weakness:** with `E = 20` a player can find the whole route in Scout (the Scout budget exceeds the optimum). Intended at this tier; strict worlds come later (`budget-model.md`).
 
 ---
 
 ## Proof of solvability
 
-`solve()` runs a breadth-first search over canonical world states using the real `stepInternal` transition (not a separate model), without a budget cap, and reports the shortest win, the number of distinct shortest sequences, the whole reachable graph and the number of dead states. The shortest solution is then **replayed from scratch** through `replay()` and must win in exactly that many actions. Results: `docs/verification/solvability-report.md`. Both the script and Vitest assert this for all five levels.
+`solve()` runs a breadth-first search over canonical world states using the real `stepInternal` transition (not a separate model), without a budget cap, and reports the shortest win, the number of distinct shortest sequences, the whole reachable graph and the number of dead states. The shortest solution is then **replayed from scratch** through `replay()` and must win in exactly that many actions. Results: `docs/verification/solvability-report.md`. Both the script and Vitest assert this for all five levels, plus: no dead states anywhere, and for Level 5 that no solution exists without the rule change.

@@ -31,7 +31,7 @@ export function renderAscii(o: PublicGameState): string {
   return [
     grid.map((r) => r.join('')).join('\n'),
     legend,
-    `actions: ${o.actionsUsed}/${o.budget}  epoch: ${o.epoch}  status: ${o.status}`,
+    `phase: ${o.phase}  scout: ${o.scout.used}/${o.scout.budget}  run: ${o.run.used}/${o.run.budget}  epoch: ${o.epoch}  status: ${o.status}`,
   ]
     .filter(Boolean)
     .join('\n');

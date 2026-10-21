@@ -2,16 +2,16 @@ import type { ChallengeDefinition } from '../types';
 
 export const level05: ChallengeDefinition = {
   id: 'w05-garden-shifts',
-  version: 1,
+  version: 2,
   name: 'The Garden Shifts',
-  briefing: 'Two doors, two switches. What you learn may not stay true. You have 22 actions.',
-  learning: 'The world can change its rules; a good strategy notices and adapts.',
+  briefing: 'Two doors, two switches, and a strange rune. What you learn may not stay true.',
+  learning: 'The world can change its rules; what you learned about a switch may stop (or start) being true.',
   difficulty: 5,
-  budget: 22,
+  budget: { explore: 20, execute: 16 },
   map: [
     '############',
-    '#@..D..w.FE#',
-    '#.a.#b.#####',
+    '#@..D....FE#',
+    '#.a.#.w.b###',
     '############',
   ],
   legend: {
@@ -24,9 +24,10 @@ export const level05: ChallengeDefinition = {
   rules: {
     doors: {
       'door-gate': { op: 'on', id: 'switch-one' },
-      'door-far': { op: 'on', id: 'switch-two' },
+      // Before the tide turns the far door is sealed: nothing opens it.
+      'door-far': { op: 'const', value: false },
     },
-    // Stepping on the tripwire inverts every door rule.
-    shift: { tripwire: 'tripwire-tide' },
+    // Stepping on the rune turns the tide: from then on switch-two controls the far door.
+    shift: { tripwire: 'tripwire-tide', doors: { 'door-far': { op: 'on', id: 'switch-two' } } },
   },
 };

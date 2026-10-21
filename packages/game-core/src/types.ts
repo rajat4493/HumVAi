@@ -3,7 +3,11 @@ export type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
 export type GameAction =
   | { type: 'MOVE'; direction: Direction }
   | { type: 'INTERACT'; targetId: string }
-  | { type: 'RESET' };
+  | { type: 'RESET' }
+  /** Ends scouting and starts the strict run. Only legal during scouting. */
+  | { type: 'COMMIT' };
+
+export type Phase = 'explore' | 'execute';
 
 export interface Pos {
   x: number;
@@ -15,7 +19,8 @@ export type Cond =
   | { op: 'on'; id: string }
   | { op: 'not'; arg: Cond }
   | { op: 'and'; args: Cond[] }
-  | { op: 'or'; args: Cond[] };
+  | { op: 'or'; args: Cond[] }
+  | { op: 'const'; value: boolean };
 
 export type EntityKind = 'door' | 'switch' | 'plate' | 'block' | 'tripwire';
 
@@ -37,9 +42,10 @@ export interface HiddenRules {
   switchInitiallyOn?: string[];
   /**
    * Rule change. The first time `tripwire` is triggered the world enters
-   * phase 1 and every door condition is inverted.
+   * epoch 1 and the listed doors switch to the given conditions
+   * (doors not listed keep their epoch-0 condition).
    */
-  shift?: { tripwire: string };
+  shift?: { tripwire: string; doors: Record<string, Cond> };
 }
 
 export interface ChallengeDefinition {
@@ -50,8 +56,12 @@ export interface ChallengeDefinition {
   briefing: string;
   learning: string;
   difficulty: 1 | 2 | 3 | 4 | 5;
-  /** Total actions allowed (MOVE + INTERACT + RESET) for human and AI alike. */
-  budget: number;
+  /**
+   * Scout & Run budgets, identical for human and AI.
+   * explore: actions allowed while scouting (0 = no scouting, the level starts in the run).
+   * execute: actions allowed in the run.
+   */
+  budget: { explore: number; execute: number };
   /** '#' wall, '.' floor, '@' start, 'E' exit, any other char is looked up in `legend`. */
   map: string[];
   legend: Record<string, LegendEntry>;
@@ -89,8 +99,11 @@ export interface PublicGameState {
   player: Pos;
   exit: Pos;
   entities: PublicEntity[];
-  budget: number;
-  actionsUsed: number;
+  /** Current phase: scouting (a sandbox) or the strict run. */
+  phase: Phase;
+  scout: { budget: number; used: number };
+  run: { budget: number; used: number };
+  /** Actions left in the *current* phase. */
   actionsRemaining: number;
   /** Visible world epoch; increments when the world visibly changes its behaviour. */
   epoch: number;
@@ -101,6 +114,7 @@ export type GameEvent =
   | { type: 'MOVED'; from: Pos; to: Pos }
   | { type: 'BLOCKED'; at: Pos; reason: 'wall' | 'door' | 'switch' | 'block' | 'edge' }
   | { type: 'PUSHED'; id: string; from: Pos; to: Pos }
+  | { type: 'PULLED'; id: string; from: Pos; to: Pos }
   | { type: 'SWITCH_TOGGLED'; id: string; on: boolean }
   | { type: 'NO_EFFECT'; targetId: string }
   | { type: 'DOOR_OPENED'; id: string }
@@ -109,6 +123,7 @@ export type GameEvent =
   | { type: 'PLATE_RELEASED'; id: string }
   | { type: 'EPOCH_CHANGED'; epoch: number }
   | { type: 'RESET' }
+  | { type: 'COMMITTED'; reason: 'player' | 'exit-found' | 'scout-spent' }
   | { type: 'WON' }
   | { type: 'LOST' }
   | { type: 'REJECTED'; reason: string };
@@ -124,7 +139,10 @@ export interface StepResult {
 export interface GameOutcome {
   status: Status;
   won: boolean;
-  actionsUsed: number;
+  /** Actions spent scouting (never affects win/lose). */
+  scoutActions: number;
+  /** Actions spent in the run (the competitive number). */
+  runActions: number;
   rejectedActions: number;
   /** Hash of the final internal state; equal hashes == identical worlds. */
   finalStateHash: string;
@@ -143,7 +161,9 @@ export interface GameState {
   platesPressed: Record<string, boolean>;
   tripwiresSpent: string[];
   epoch: number;
-  actionsUsed: number;
+  phase: Phase;
+  scoutUsed: number;
+  runUsed: number;
   rejectedActions: number;
   status: Status;
 }

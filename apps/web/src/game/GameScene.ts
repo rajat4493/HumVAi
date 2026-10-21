@@ -9,7 +9,7 @@ type Img = Phaser.GameObjects.Image;
 export class GameScene extends Phaser.Scene {
   private ctl!: GameController;
   private board!: Phaser.GameObjects.Container;
-  private floors: Img[] = [];
+  private floors: { img: Img; parity: 'A' | 'B' }[] = [];
   private sprites = new Map<string, Img>();
   private player!: Img;
   private exit!: Img;
@@ -60,9 +60,10 @@ export class GameScene extends Phaser.Scene {
     for (let y = 0; y < o.height; y++) {
       for (let x = 0; x < o.width; x++) {
         if (o.tiles[y]?.[x] === '#') continue;
-        const f = this.add.image(x * TILE, y * TILE, (x + y) % 2 ? 'floorA' : 'floorB').setOrigin(0, 0);
+        const parity = (x + y) % 2 ? 'A' : 'B';
+        const f = this.add.image(x * TILE, y * TILE, `floor${parity}`).setOrigin(0, 0);
         f.setDepth(0);
-        this.floors.push(f);
+        this.floors.push({ img: f, parity });
         this.board.add(f);
       }
     }
@@ -94,6 +95,7 @@ export class GameScene extends Phaser.Scene {
     const pc = this.cell(o.player.x, o.player.y);
     this.player = this.add.image(pc.x, pc.y, 'human').setDepth(o.player.y * 10 + 7);
     this.board.add(this.player);
+    this.board.sort('depth');
     this.sync(o);
   }
 
@@ -120,7 +122,11 @@ export class GameScene extends Phaser.Scene {
       const tex = this.textureFor(e);
       if (s.texture.key !== tex) s.setTexture(tex);
     }
-    this.floors.forEach((f) => (o.epoch % 2 === 1 ? f.setTint(0xb8a0ff) : f.clearTint()));
+    const theme = o.epoch >= 1 ? 'Shift' : o.phase === 'explore' ? 'Scout' : '';
+    this.floors.forEach((f) => {
+      const key = `floor${theme}${f.parity}`;
+      if (f.img.texture.key !== key) f.img.setTexture(key);
+    });
   }
 
   private layout(): void {
@@ -169,6 +175,19 @@ export class GameScene extends Phaser.Scene {
           this.bump(this.player, dx, dy);
           break;
         }
+        case 'PULLED': {
+          const b = this.sprites.get(ev.id);
+          if (b) {
+            const c = this.cell(ev.to.x, ev.to.y);
+            b.setDepth(ev.to.y * 10 + 6);
+            this.tweens.killTweensOf(b);
+            this.tween({ targets: b, x: c.x, y: c.y, duration: 140, ease: 'Quad.out' });
+          }
+          break;
+        }
+        case 'COMMITTED':
+          this.cameras.main.fadeIn(320, 11, 16, 38);
+          break;
         case 'SWITCH_TOGGLED':
           this.pulse(this.sprites.get(ev.id));
           break;
@@ -195,8 +214,11 @@ export class GameScene extends Phaser.Scene {
           break;
       }
     }
-    if (events.some((e) => e.type === 'RESET')) this.build(o);
-    else this.sync(o);
+    if (events.some((e) => e.type === 'RESET' || e.type === 'COMMITTED')) this.build(o);
+    else {
+      this.board.sort('depth');
+      this.sync(o);
+    }
   }
 
   private squash(img: Img): void {

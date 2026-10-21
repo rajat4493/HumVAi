@@ -59,6 +59,8 @@ export class GameController {
       this.interact();
     } else if (e.key === 'r') {
       this.dispatch({ type: 'RESET' });
+    } else if (e.key === 'c') {
+      this.dispatch({ type: 'COMMIT' });
     }
   };
 
@@ -90,6 +92,10 @@ export class GameController {
   interact(): void {
     const target = legalActions(this.state).find((a) => a.type === 'INTERACT');
     if (target) this.dispatch(target);
+  }
+
+  commit(): void {
+    this.dispatch({ type: 'COMMIT' });
   }
 
   restart(): void {

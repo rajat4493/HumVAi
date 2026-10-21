@@ -61,6 +61,8 @@ export function parseWorld(c: ChallengeDefinition): ParsedWorld {
         if (k !== 'switch' && k !== 'plate') throw new Error(`${c.id}: condition references ${cond.id} which is not a switch/plate`);
         return;
       }
+      case 'const':
+        return;
       case 'not':
         return checkCond(cond.arg);
       case 'and':
@@ -80,10 +82,17 @@ export function parseWorld(c: ChallengeDefinition): ParsedWorld {
   for (const id of c.rules.switchInitiallyOn ?? []) {
     if (kindOf.get(id) !== 'switch') throw new Error(`${c.id}: switchInitiallyOn references non-switch ${id}`);
   }
-  if (c.rules.shift && kindOf.get(c.rules.shift.tripwire) !== 'tripwire') {
-    throw new Error(`${c.id}: shift references non-tripwire ${c.rules.shift.tripwire}`);
+  if (c.rules.shift) {
+    if (kindOf.get(c.rules.shift.tripwire) !== 'tripwire') {
+      throw new Error(`${c.id}: shift references non-tripwire ${c.rules.shift.tripwire}`);
+    }
+    for (const [id, cond] of Object.entries(c.rules.shift.doors)) {
+      if (kindOf.get(id) !== 'door') throw new Error(`${c.id}: shift rewires non-door ${id}`);
+      checkCond(cond);
+    }
   }
-  if (c.budget < 1) throw new Error(`${c.id}: budget must be >= 1`);
+  if (c.budget.execute < 1) throw new Error(`${c.id}: execute budget must be >= 1`);
+  if (c.budget.explore < 0) throw new Error(`${c.id}: explore budget must be >= 0`);
 
   const parsed: ParsedWorld = { width, height, walls, start, exit, entities };
   cache.set(c, parsed);

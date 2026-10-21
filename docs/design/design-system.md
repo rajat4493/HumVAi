@@ -50,7 +50,9 @@ Rounded display face for titles/numbers; neutral system sans for body. **No web-
 | Tripwire | Dashed ring + diamond (rune) | violet → grey | armed (pulses), spent |
 | AI | Rotated rounded diamond, gently hovering | periwinkle | (M2: appears as a ghost run) |
 
-- **Epoch change** (world rules changed): camera flash + floor tint (`#b8a0ff` multiply). Cue only; never explains the new rule.
+- **Scout phase** (added in the M0 review): blueprint-blue floor textures, faint grid and blue glow on the frame, SCOUT pill and blue budget dots/bar. **Run phase:** the normal navy floor, amber RUN pill and amber dots.
+- **Epoch change** (world rules changed): camera flash, violet floor textures, violet frame glow and the toast "The world just changed". Cue only; never explains the new rule.
+- **Budget display:** dots up to 14, a bar with a number above that.
 - The board takes the largest area the screen allows (desktop: centre column; mobile: full width above controls). Scale = `min(w/mapW, h/mapH)` with 4% padding.
 
 ## 4. Human and AI identities

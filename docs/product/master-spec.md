@@ -10,11 +10,11 @@ The original plan was supplied in chat. It is summarised here by *decision statu
 | Genre | Competitive discovery puzzle adventure | Frozen | — |
 | Game 1 | "The Experiment": hidden rules in miniature worlds | Frozen | `docs/design/levels.md` |
 | Engine | Pure TS, deterministic, replayable, partially observable | **Implemented (M0)** | `packages/game-core`, `docs/architecture/engine.md` |
-| Budget | One shared action budget; RESET costs 1 | **M0 choice — needs approval** | `docs/product/m0-audit.md` §3 |
-| Levels | 5 handcrafted, all solver-verified | **Designed + verified (M0)** | `docs/verification/solvability-report.md` |
-| Renderer | Phaser (pinned 3.90.0) | **M0 choice — needs approval** | audit §3.1 |
-| Visual identity | Playful Futurism | Prototype built | `docs/design/design-system.md` |
-| AI opponent | Real model via adapter, recorded attempts | Not started (M2) | — |
+| Budget | **Scout & Run** (explore sandbox with free reset, then strict run). Replaces the single shared budget | **Implemented; review corrections** | `docs/product/budget-model.md` |
+| Levels | 5 handcrafted, solver-verified; L3 has no dead states, L5's rule change is provably essential | **Revised and verified** | `docs/verification/solvability-report.md` |
+| Renderer | Phaser (pinned 3.90.0) | **Approved** | M0 review |
+| Visual identity | Playful Futurism | Provisionally approved | `docs/design/design-system.md` |
+| AI opponent | Real model via adapter, recorded attempts | **Plan proposed, not implemented** | `docs/product/ai-opponent-plan.md` |
 | Backend / DB / auth | Fastify, Postgres, Drizzle | Not started | — |
 | Campaign | 20 levels | Unvalidated target | audit §2 |
 
@@ -25,3 +25,5 @@ M0 foundation (this deliverable, awaiting approval) → M1 playable vertical sli
 ## Change log
 
 - M0: foundation, engine, five levels, visual prototype of level 1. See `docs/M0-HANDOVER.md`.
+- M0 review corrections: Level 3 recoverable (block drag), Level 5 rule change essential, Scout & Run budgets, experience review, AI opponent plan. See `docs/M0-CORRECTIONS.md`.
+- Approved in review: stay on Phaser 3.90, keep level order, keep minimal repo structure, keep visual direction provisionally.

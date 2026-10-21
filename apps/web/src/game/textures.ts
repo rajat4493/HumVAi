@@ -58,7 +58,15 @@ function star(g: G, cx: number, cy: number, r: number, color: number): void {
 export function buildTextures(scene: Phaser.Scene): void {
   const T = TILE;
 
-  for (const [key, base] of [['floorA', C.floorA], ['floorB', C.floorB]] as const) {
+  const floors = [
+    ['floorA', C.floorA],
+    ['floorB', C.floorB],
+    ['floorScoutA', 0x1d3a6b], // scouting: blueprint blue
+    ['floorScoutB', 0x214373],
+    ['floorShiftA', 0x4a2f86], // the world changed its rules: violet
+    ['floorShiftB', 0x53368f],
+  ] as const;
+  for (const [key, base] of floors) {
     make(scene, key, T, T, (g) => {
       g.fillStyle(base, 1);
       g.fillRoundedRect(2, 2, T - 4, T - 4, 12);
