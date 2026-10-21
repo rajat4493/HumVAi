@@ -1,0 +1,5 @@
+{
+  "_comment": "Operator-supplied US$ per million tokens. No prices are guessed or hard-coded; copy to prices.json and fill from the provider's price page.",
+  "anthropic:claude-sonnet-5-5": { "inputPerMTok": 0, "outputPerMTok": 0, "cachedInputPerMTok": 0 },
+  "openai:<model-id>": { "inputPerMTok": 0, "outputPerMTok": 0 }
+}

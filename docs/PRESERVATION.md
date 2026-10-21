@@ -1,5 +1,7 @@
 # Repository preservation status
 
+> **Update (M1 limited implementation, Gate 0):** the push now succeeds. `git ls-remote origin refs/heads/claude/humans-vs-ai-plan-fz5yq0` returned `86f038798aa9596340ca1785fe0519ddd2124ff8`, identical to the local HEAD at that time. The remainder of this file records the earlier blocked state and the fallback archives and is kept for history.
+
 **Gate status: NOT satisfied on GitHub.** `git push` to `rajat4493/HumVAi` is refused (HTTP 403, "Claude doesn't have GitHub access to rajat4493/HumVAi for your organization") and has been retried in every session turn. `git ls-remote origin` also fails. The remote therefore holds nothing from this work.
 
 What exists outside the container: the files I delivered into the chat (below). I cannot verify that you saved them; please confirm.

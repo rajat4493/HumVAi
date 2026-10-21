@@ -18,8 +18,10 @@
     "verify:levels": "npm run verify:levels --workspace @hva/game-core",
     "test:e2e": "playwright test --project=desktop --project=mobile",
     "screenshots": "playwright test --config playwright.config.ts tests/e2e/screenshots.spec.ts",
-    "check": "npm run typecheck && npm run lint && npm test && npm run verify:levels && npm run build",
-    "recordings": "playwright test tests/e2e/recording.spec.ts --project=rec-desktop --project=rec-mobile"
+    "check": "npm run typecheck && npm run lint && npm test && npm run verify:levels && npm run build && npm run scan:bundle",
+    "recordings": "playwright test tests/e2e/recording.spec.ts --project=rec-desktop --project=rec-mobile",
+    "runner": "npm run runner --workspace @hva/runner --",
+    "scan:bundle": "node tools/scan-bundle.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

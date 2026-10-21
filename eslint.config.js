@@ -26,10 +26,19 @@ export default tseslint.config(
     },
   },
   {
+    // Browser-safe by construction: no Node built-ins, and the provider (network, API-key) code is never imported by the web app.
+    files: ['packages/ai-adapters/src/**/*.ts'],
+    rules: { 'no-restricted-imports': ['error', { patterns: ['node:*', 'fs', 'path', 'child_process', 'react*', 'phaser*'] }] },
+  },
+  {
     files: ['apps/web/**/*.{ts,tsx}'],
     languageOptions: { globals: globals.browser },
     plugins: { 'react-hooks': reactHooks },
-    rules: reactHooks.configs.recommended.rules,
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      'no-restricted-imports': ['error', { patterns: ['@hva/ai-adapters/providers', '@hva/runner*', 'node:*'] }],
+      'no-restricted-properties': ['error', { object: 'process', property: 'env', message: 'API keys and env belong to the server-side runner only.' }],
+    },
   },
-  { files: ['**/*.{js,mjs}', 'tests/**/*.ts', 'playwright.config.ts', 'packages/game-core/scripts/**/*.ts'], languageOptions: { globals: globals.node } },
+  { files: ['**/*.{js,mjs}', 'tests/**/*.ts', 'playwright.config.ts', 'packages/game-core/scripts/**/*.ts', 'apps/runner/**/*.ts', 'packages/ai-adapters/test/**/*.ts', 'tools/**/*.mjs'], languageOptions: { globals: globals.node } },
 );
