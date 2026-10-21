@@ -1,13 +1,13 @@
 import Phaser from 'phaser';
 import type { GameEvent, PublicEntity, PublicGameState } from '@hva/game-core';
-import type { GameController } from './controller';
+import type { BoardController } from './controller';
 import { buildTextures } from './textures';
 import { C, TILE, prefersReducedMotion } from './theme';
 
 type Img = Phaser.GameObjects.Image;
 
 export class GameScene extends Phaser.Scene {
-  private ctl!: GameController;
+  private ctl!: BoardController;
   private board!: Phaser.GameObjects.Container;
   private floors: { img: Img; parity: 'A' | 'B' }[] = [];
   private sprites = new Map<string, Img>();
@@ -21,7 +21,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.ctl = this.game.registry.get('controller') as GameController;
+    this.ctl = this.game.registry.get('controller') as BoardController;
     this.reduced = prefersReducedMotion();
     buildTextures(this);
     this.board = this.add.container(0, 0);
@@ -93,7 +93,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     const pc = this.cell(o.player.x, o.player.y);
-    this.player = this.add.image(pc.x, pc.y, 'human').setDepth(o.player.y * 10 + 7);
+    this.player = this.add.image(pc.x, pc.y, this.ctl.avatar).setDepth(o.player.y * 10 + 7);
     this.board.add(this.player);
     this.board.sort('depth');
     this.sync(o);
@@ -209,7 +209,8 @@ export class GameScene extends Phaser.Scene {
           this.cameras.main.fadeIn(220, 11, 16, 38);
           break;
         case 'WON':
-          this.celebrate();
+          if (this.ctl.avatar === 'human') this.celebrate();
+          else this.celebrateSmall(); // a recorded AI win is shown calmly: a ring, not confetti
           break;
         case 'LOST':
           this.cameras.main.shake(160, 0.004);

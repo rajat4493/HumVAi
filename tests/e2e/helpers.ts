@@ -13,6 +13,12 @@ export interface Hva {
   log: unknown[];
 }
 
+declare global {
+  interface Window {
+    __HVA_REPLAY__?: { stepTimes: number[]; position: () => number };
+  }
+}
+
 export const ready = (page: Page) => page.waitForFunction(() => '__HVA__' in window);
 
 export const state = (page: Page) => page.evaluate(() => (window as unknown as { __HVA__: Hva }).__HVA__.getState());

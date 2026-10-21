@@ -421,3 +421,26 @@ describe('solvability and shape of every level (engine-driven BFS)', () => {
     });
   }
 });
+
+describe('rule change can also (un)jam switches', () => {
+  // The switch is jammed until the rune is stepped on.
+  const jammed: ChallengeDefinition = {
+    id: 'test-unjam', version: 1, name: 'x', briefing: 'x', learning: 'x', difficulty: 1,
+    budget: { explore: 0, execute: 20 },
+    map: ['#######', '#@a...E', '#.w####', '#######'],
+    legend: { a: { kind: 'switch', id: 'sw' }, w: { kind: 'tripwire', id: 'rune' } },
+    rules: { doors: {}, switchEnabled: { sw: { op: 'const', value: false } }, shift: { tripwire: 'rune', doors: {}, switchEnabled: { sw: { op: 'const', value: true } } } },
+  };
+  it('the switch does nothing before the change and works after it', () => {
+    const s = create(jammed, 's');
+    expect(step(s, use('sw')).events).toEqual([{ type: 'NO_EFFECT', targetId: 'sw' }]);
+    mv('DR').forEach((a) => step(s, a)); // onto the rune
+    expect(observe(s).epoch).toBe(1);
+    mv('LU').forEach((a) => step(s, a));
+    expect(step(s, use('sw')).events).toEqual([{ type: 'SWITCH_TOGGLED', id: 'sw', on: true }]);
+  });
+
+  it('validates references', () => {
+    expect(() => create({ ...jammed, rules: { ...jammed.rules, shift: { tripwire: 'rune', doors: {}, switchEnabled: { rune: { op: 'const', value: true } } } } }, 'x')).toThrow(/non-switch/);
+  });
+});

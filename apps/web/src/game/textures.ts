@@ -118,6 +118,33 @@ export function buildTextures(scene: Phaser.Scene): void {
     g.fillCircle(T / 2 + 11.5, T / 2 - 6, 1.6);
   });
 
+  // The AI: a hovering rounded diamond in periwinkle (distinct from the human's round amber blob by shape and colour).
+  make(scene, 'ai', T, T, (g) => {
+    const cx = T / 2;
+    const cy = T / 2 - 4;
+    g.fillStyle(0x000000, 0.28);
+    g.fillEllipse(cx, T - 16, 44, 12);
+    glow(g, cx, cy, 30, C.ai, 0.3);
+    const diamond = (r: number, color: number, a = 1) => {
+      g.fillStyle(color, a);
+      g.fillPoints(
+        [
+          { x: cx, y: cy - r },
+          { x: cx + r, y: cy },
+          { x: cx, y: cy + r },
+          { x: cx - r, y: cy },
+        ],
+        true,
+      );
+    };
+    diamond(34, 0x4a5fe0);
+    diamond(31, C.ai);
+    diamond(18, 0xc6d1ff, 0.55);
+    g.fillStyle(0x1b2552, 1);
+    g.fillCircle(cx - 7, cy, 3.6);
+    g.fillCircle(cx + 7, cy, 3.6);
+  });
+
   make(scene, 'block', T, T, (g) => {
     g.fillStyle(0x000000, 0.3);
     g.fillEllipse(T / 2, T - 12, 62, 14);

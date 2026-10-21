@@ -86,6 +86,10 @@ export function parseWorld(c: ChallengeDefinition): ParsedWorld {
     if (kindOf.get(c.rules.shift.tripwire) !== 'tripwire') {
       throw new Error(`${c.id}: shift references non-tripwire ${c.rules.shift.tripwire}`);
     }
+    for (const [id, cond] of Object.entries(c.rules.shift.switchEnabled ?? {})) {
+      if (kindOf.get(id) !== 'switch') throw new Error(`${c.id}: shift.switchEnabled references non-switch ${id}`);
+      checkCond(cond);
+    }
     for (const [id, cond] of Object.entries(c.rules.shift.doors)) {
       if (kindOf.get(id) !== 'door') throw new Error(`${c.id}: shift rewires non-door ${id}`);
       checkCond(cond);

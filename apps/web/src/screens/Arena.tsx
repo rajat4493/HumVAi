@@ -1,16 +1,23 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChallengeDefinition } from '@hva/game-core';
-import { ALL_ACHIEVEMENTS, analyzeRun, campaignEntry } from '@hva/game-core';
+import { ALL_ACHIEVEMENTS, analyzeRun, campaignEntry, solve } from '@hva/game-core';
+import type { GameAction } from '@hva/game-core';
 import { ActorCard } from '../components/ActorCard';
 import { BudgetPips } from '../components/BudgetPips';
 import { Dpad } from '../components/Dpad';
+import { captionFor } from '../game/caption';
+import { describeBoard } from '../lib/describe';
 import { BackIcon, BulbIcon, MenuIcon } from '../components/icons';
 import { audio } from '../audio/instance';
 import { cuesForEvents } from '../audio/cues';
 import { Modal } from '../components/Modal';
 import { GameController } from '../game/controller';
 import type { Snapshot } from '../game/controller';
+import { stepsFromActions, stepsFromRecord } from '../game/replay';
 import { optimalLength } from '../lib/solve';
+import { useOpponent } from '../opponent/useOpponent';
+import { ReplayPanel } from '../replay/ReplayPanel';
+import { Reveal } from './Reveal';
 import { progressOf, recordLoss, recordWin } from '../save/save';
 import type { SaveStore } from '../save/store';
 
@@ -53,8 +60,17 @@ export function Arena({ challenge, index, total, store, skipBriefing, onMap, onN
   const [briefing, setBriefing] = useState(!skipBriefing || resumable.current !== null);
   const [toast, setToast] = useState<string | null>(null);
   const [hintsUsed, setHintsUsed] = useState(resumable.current?.hintsUsed ?? 0);
-  const [dialog, setDialog] = useState<'menu' | 'hints' | 'confirm-restart' | null>(null);
+  const [dialog, setDialog] = useState<'menu' | 'hints' | 'confirm-restart' | 'describe' | null>(null);
+  const [announce, setAnnounce] = useState('');
   const [result, setResult] = useState<ResultInfo | null>(null);
+  const [replay, setReplay] = useState<'ai' | 'shortest' | null>(null);
+  const opponent = useOpponent(challenge);
+  // Memoised: a new steps array would rebuild the replay board on every render.
+  const aiSteps = useMemo(() => (opponent.kind === 'ready' ? stepsFromRecord(opponent.rec.shown) : null), [opponent]);
+  const shortestSteps = useMemo(
+    () => stepsFromActions(challenge, [...(challenge.budget.explore > 0 ? ([{ type: 'COMMIT' }] as GameAction[]) : []), ...((solve(challenge).optimalSolution ?? []) as GameAction[])], 'shortest'),
+    [challenge],
+  );
   const hintsRef = useRef(hintsUsed);
   hintsRef.current = hintsUsed;
   const scouts = challenge.budget.explore > 0;
@@ -66,6 +82,7 @@ export function Arena({ challenge, index, total, store, skipBriefing, onMap, onN
     const off = c.subscribe((s) => {
       setSnap(s);
       audio.setIntensity(s.obs.phase === 'explore' ? 'scout' : 'run');
+      if (s.action) setAnnounce(`${captionFor({ action: s.action, valid: true, events: s.events })} ${s.obs.actionsRemaining} actions left in the ${s.obs.phase === 'explore' ? 'scout' : 'run'}.`);
       for (const cue of cuesForEvents(s.events)) audio.play(cue);
       if (s.obs.status === 'playing' && c.log.length > 0) {
         store.setSession({ v: 1, levelId: challenge.id, levelVersion: challenge.version, actions: [...c.log], hintsUsed: hintsRef.current, startedAt: startedAt.current });
@@ -145,6 +162,9 @@ export function Arena({ challenge, index, total, store, skipBriefing, onMap, onN
 
   return (
     <div className={`arena ${phase}${obs && obs.epoch >= 1 ? ' shifted' : ''}`}>
+      <div className="sr-only" role="status" aria-live="polite" data-testid="announcer">
+        {announce}
+      </div>
       <header className="hud">
         <div className="hud-left">
           <button className="icon-btn" aria-label="Back to the world map" onClick={onMap}>
@@ -198,7 +218,15 @@ export function Arena({ challenge, index, total, store, skipBriefing, onMap, onN
       <ActorCard
         side="ai"
         name="The AI"
-        role="Gets the same world, the same scouting and the same run budget. Its recorded attempt arrives in a later milestone."
+        role={
+          opponent.kind === 'ready'
+            ? opponent.rec.kind === 'reference'
+              ? 'A recorded reference attempt (a computed player, not an AI) is waiting. You will see it when your run ends.'
+              : 'A recorded attempt is waiting. You will see it when your run ends.'
+            : opponent.kind === 'loading'
+              ? 'Gets the same world, the same scouting and the same run budget.'
+              : 'Gets the same world, the same scouting and the same run budget. There is no recorded attempt for this world yet.'
+        }
         stat={scouts ? `Scout ${challenge.budget.explore} · Run ${challenge.budget.execute}` : `Run ${challenge.budget.execute}`}
       />
 
@@ -281,11 +309,31 @@ export function Arena({ challenge, index, total, store, skipBriefing, onMap, onN
             <button className="btn" data-autofocus onClick={() => setDialog(null)}>
               Resume
             </button>
+            <button className="btn ghost" data-testid="describe-board" onClick={() => setDialog('describe')}>
+              Describe the board
+            </button>
             <button className="btn ghost" onClick={() => setDialog('confirm-restart')}>
               Restart this world
             </button>
             <button className="btn ghost" onClick={onMap}>
               Back to the map
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {dialog === 'describe' && obs && (
+        <Modal label="Board description" onClose={() => setDialog('menu')}>
+          <div className="kicker">Board description</div>
+          <h2>{challenge.name}</h2>
+          <ul className="describe-list" data-testid="board-description">
+            {describeBoard(obs).map((l, i) => (
+              <li key={i}>{l}</li>
+            ))}
+          </ul>
+          <div className="row">
+            <button className="btn" data-autofocus onClick={() => setDialog('menu')}>
+              Back
             </button>
           </div>
         </Modal>
@@ -312,27 +360,27 @@ export function Arena({ challenge, index, total, store, skipBriefing, onMap, onN
         </Modal>
       )}
 
+      {replay === 'ai' && opponent.kind === 'ready' && aiSteps && (
+        <ReplayPanel challenge={challenge} steps={aiSteps} seed={opponent.rec.shown.seed} source={{ kind: 'recorded', rec: opponent.rec }} onClose={() => setReplay(null)} />
+      )}
+      {replay === 'shortest' && (
+        <ReplayPanel challenge={challenge} steps={shortestSteps} seed="shortest" source={{ kind: 'computed', label: 'The shortest way (computed)' }} onClose={() => setReplay(null)} />
+      )}
+
       {!briefing && status !== 'playing' && obs && result && (
-        <Modal label="Result">
+        <Modal label="Result" className="result">
           <div className="kicker">{result.won ? (result.hintsUsed > 0 ? 'Exit reached · Assisted' : 'Exit reached') : 'Out of actions'}</div>
           <h2 className={result.won ? 'win-title' : 'lose-title'}>{result.won ? 'You made it out.' : 'Not this time.'}</h2>
-          <div className="compare">
-            <div>
-              <small>You · run</small>
-              <b>
-                {result.runActions}
-                <span className="of"> / {obs.run.budget}</span>
-              </b>
-              <small>{scouts ? `after scouting ${result.scoutActions} of ${obs.scout.budget}` : 'no scouting here'}</small>
-            </div>
-            <div>
-              <small>Shortest possible</small>
-              <b>{result.optimal}</b>
-              <small>{result.won && result.isOptimal ? 'you matched it' : 'computed, not an AI'}</small>
-            </div>
-          </div>
+          <Reveal
+            challenge={challenge}
+            human={{ won: result.won, runActions: result.runActions, scoutActions: result.scoutActions, assisted: result.hintsUsed > 0 }}
+            optimal={result.optimal}
+            opponent={opponent}
+            onReplay={() => setReplay('ai')}
+            onShortest={() => setReplay('shortest')}
+          />
           {result.won && (
-            <ul className="result-notes">
+            <ul className="result-notes chips">
               {result.newUnassistedBest && result.hintsUsed === 0 && <li className="good">New personal best.</li>}
               {result.isOptimal && <li className="good">Shortest possible run.</li>}
               {result.hintsUsed > 0 && <li>Assisted run: it completes the world but does not set a personal best.</li>}
@@ -344,7 +392,6 @@ export function Arena({ challenge, index, total, store, skipBriefing, onMap, onN
               ))}
             </ul>
           )}
-          <p className="note">The AI's recorded attempt for this world is not available yet.</p>
           <div className="row">
             <button className="btn ghost" data-autofocus={!result.won || !onNext} onClick={restart}>
               {result.won ? 'Play again' : 'Try again'}

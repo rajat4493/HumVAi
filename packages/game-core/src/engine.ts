@@ -278,7 +278,7 @@ export function stepInternal(s: GameState, action: GameAction): { next: GameStat
         return wrap(r.next, r.result.events, false);
       }
       spend(next);
-      const gate = next.challenge.rules.switchEnabled?.[sw.id];
+      const gate = (next.epoch >= 1 ? next.challenge.rules.shift?.switchEnabled?.[sw.id] : undefined) ?? next.challenge.rules.switchEnabled?.[sw.id];
       if (gate && !evalCond(next, gate)) {
         events.push({ type: 'NO_EFFECT', targetId: sw.id });
       } else {

@@ -28,7 +28,8 @@ export function Modal({ label, children, onClose, className }: Props) {
     root?.setAttribute('inert', '');
     const el = ref.current;
     const first = el?.querySelector<HTMLElement>('[data-autofocus]') ?? el?.querySelector<HTMLElement>(FOCUSABLE);
-    (first ?? el)?.focus();
+    (first ?? el)?.focus({ preventScroll: true });
+    if (el) el.scrollTop = 0;
     return () => {
       openCount -= 1;
       if (openCount === 0) root?.removeAttribute('inert');

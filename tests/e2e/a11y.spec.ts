@@ -1,0 +1,86 @@
+import AxeBuilder from '@axe-core/playwright';
+import { expect, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { play, ready } from './helpers';
+
+/** Automated WCAG 2.1 A/AA scan (axe-core). It catches roughly a third of issues; it does not replace manual and screen-reader testing. */
+async function scan(page: Page, label: string) {
+  const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+  const bad = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+  expect(bad.map((v) => `${label}: ${v.id} (${v.impact}) ${v.nodes[0]?.html.slice(0, 120)}`), label).toEqual([]);
+}
+
+const FIX = '&fixtures=1&unlock=all';
+
+test('every screen has no serious or critical automated accessibility violations', async ({ page, isMobile }) => {
+  await page.goto('/');
+  await scan(page, 'title');
+  await page.getByTestId('play').click();
+  await scan(page, 'world map');
+  await page.getByTestId('settings-button').click();
+  await scan(page, 'settings');
+  await page.getByTestId('settings-back').click();
+  await page.getByTestId('hall-button').click();
+  await scan(page, 'hall');
+
+  await page.goto(`/?screen=arena&level=2${FIX}`);
+  await scan(page, 'briefing dialog');
+  await page.getByTestId('begin').click();
+  await ready(page);
+  await scan(page, 'arena (scout)');
+  await page.getByTestId('hint-button').click();
+  await scan(page, 'hint dialog');
+  await page.getByRole('dialog', { name: 'Hints' }).getByRole('button', { name: 'Close' }).click();
+  await page.getByTestId('menu-button').click();
+  await scan(page, 'menu dialog');
+  await page.getByTestId('describe-board').click();
+  await scan(page, 'board description');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+
+  await page.goto(`/?screen=arena&level=1&briefing=0${FIX}`);
+  await ready(page);
+  await play(page, 'RRDDRRUU', !!isMobile);
+  await expect(page.getByTestId('reveal')).toBeVisible();
+  await page.waitForTimeout(1800);
+  await scan(page, 'result reveal');
+  await page.getByTestId('watch-ai').click();
+  await scan(page, 'replay');
+});
+
+test('screen readers get a caption of every action and a full text description of the board', async ({ page, isMobile }) => {
+  await page.goto(`/?screen=arena&level=2&briefing=0${FIX}`);
+  await ready(page);
+  await play(page, 'R', !!isMobile);
+  await expect(page.getByTestId('announcer')).toHaveText(/Moved right\. 15 actions left in the scout\./);
+  await play(page, 'U', !!isMobile);
+  await expect(page.getByTestId('announcer')).toContainText('blocked');
+  await page.getByTestId('menu-button').click();
+  await page.getByTestId('describe-board').click();
+  const text = await page.getByTestId('board-description').innerText();
+  expect(text).toContain('You are at column 3, row 2');
+  expect(text).toContain('switch (orange)');
+  expect(text).toContain('door (garden)');
+  expect(text).toContain('scouting');
+});
+
+test('a keyboard alone can play, scout, commit, open the menu and a dialog without a mouse', async ({ page }) => {
+  await page.goto('/?screen=arena&level=2&briefing=0&unlock=all');
+  await ready(page);
+  for (const k of ['ArrowRight', 'ArrowRight', 'ArrowDown']) await page.keyboard.press(k);
+  await page.keyboard.press('Space'); // interact with the orange switch
+  await page.keyboard.press('c'); // commit
+  await expect(page.getByTestId('phase')).toHaveText('Run');
+  await page.getByTestId('menu-button').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog', { name: 'Menu' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog', { name: 'Menu' })).toBeHidden();
+});
+
+test('the scanner itself can fail: a page with an unnamed button and an image without alt is flagged', async ({ page }) => {
+  await page.setContent('<!doctype html><html lang="en"><title>t</title><main><button></button><img src="data:image/gif;base64,R0lGODlhAQABAAAAACw="></main></html>');
+  const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
+  const ids = results.violations.map((v) => v.id);
+  expect(ids).toEqual(expect.arrayContaining(['button-name', 'image-alt']));
+});

@@ -10,3 +10,7 @@ export type { Verification } from './verify';
 export { costOf, median, percentile, priceKey, summarize, wilson } from './stats';
 export type { Summary } from './stats';
 export { randomLegalAdapter, scriptedAdapter, textAdapter } from './scripted';
+export { compareHeadToHead } from './compare';
+export type { Comparison, Outcome, Side } from './compare';
+export { SCHEMA_OPPONENT, buildOpponent, checkOpponent, gridDistanceToExit, selectShownAttempt } from './opponent';
+export type { AttemptSummary, OpponentCheck, OpponentRecording, Selection } from './opponent';

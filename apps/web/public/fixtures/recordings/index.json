@@ -1,0 +1,25 @@
+{
+  "schema": "hva.recordings.1",
+  "recordings": [
+    {
+      "challengeId": "w01-first-steps",
+      "file": "w01-first-steps.json"
+    },
+    {
+      "challengeId": "w02-orange-switch",
+      "file": "w02-orange-switch.json"
+    },
+    {
+      "challengeId": "w03-locked-garden",
+      "file": "w03-locked-garden.json"
+    },
+    {
+      "challengeId": "w04-only-when",
+      "file": "w04-only-when.json"
+    },
+    {
+      "challengeId": "w05-garden-shifts",
+      "file": "w05-garden-shifts.json"
+    }
+  ]
+}

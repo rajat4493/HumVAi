@@ -45,7 +45,7 @@ export interface HiddenRules {
    * epoch 1 and the listed doors switch to the given conditions
    * (doors not listed keep their epoch-0 condition).
    */
-  shift?: { tripwire: string; doors: Record<string, Cond> };
+  shift?: { tripwire: string; doors: Record<string, Cond>; /** Switches whose jam condition changes in epoch 1 (use {op:'const',value:true} to unjam). */ switchEnabled?: Record<string, Cond> };
 }
 
 export interface ChallengeDefinition {

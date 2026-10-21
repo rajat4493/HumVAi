@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { CAMPAIGN_ORDER, LEVELS, levelById } from '@hva/game-core';
 import { applyMotion } from './lib/motion';
 import { completedCount, isUnlocked } from './save/save';
 import { store, useSave } from './save/instance';
-import { Arena } from './screens/Arena';
 import { Hall } from './screens/Hall';
 import { Settings } from './screens/Settings';
 import { Welcome } from './screens/Welcome';
 import { WorldMap } from './screens/WorldMap';
+
+// The game board (Phaser, ~330 KB gzipped) loads only when a world is opened, so the title and map are quick.
+const Arena = lazy(() => import('./screens/Arena').then((m) => ({ default: m.Arena })));
 
 type Screen = { name: 'welcome' } | { name: 'map' } | { name: 'settings'; from: 'welcome' | 'map' } | { name: 'hall'; from: 'welcome' | 'map' } | { name: 'play'; levelId: string };
 
@@ -88,5 +90,17 @@ export function App() {
       break;
     }
   }
-  return <div className="stage">{view}</div>;
+  return (
+    <div className="stage">
+      <Suspense
+        fallback={
+          <div className="loading" role="status">
+            Loading the world…
+          </div>
+        }
+      >
+        {view}
+      </Suspense>
+    </div>
+  );
 }

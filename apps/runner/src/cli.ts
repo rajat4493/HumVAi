@@ -5,6 +5,7 @@ import { verifyRecord } from '@hva/ai-adapters';
 import { listAnthropicModels, listOpenAIModels } from '@hva/ai-adapters/providers';
 import { baseUrlOverride, gitVersion, loadPrices, makeAdapter, parseSpec, promptHash } from './config';
 import { levelsById, runExperiment } from './exec';
+import { publishRecordings } from './publish';
 import { buildReport } from './report';
 import { paths, readJsonl } from './store';
 
@@ -17,6 +18,8 @@ const USAGE = `hva runner (server-side only; API keys come from the environment,
       Live runs REQUIRE --live and a cap. They stop at 90% (no new attempts) and 100% (mid-attempt).
   verify --out <dir>          Re-verify every record against the engine; non-zero exit on any failure.
   report --out <dir> [--title T] [--write file.md]
+  publish --out <dir> --model <provider:id> [--to apps/web/public/recordings]
+      Turn verified records of ONE real model into the static recordings the game ships (test players are refused).
 `;
 
 function parseArgs(argv: string[]): { cmd: string; flags: Map<string, string[]>; bools: Set<string> } {
@@ -107,6 +110,16 @@ async function main(): Promise<number> {
     }
     console.log(`${records.length - bad}/${records.length} verified`);
     return bad === 0 ? 0 : 1;
+  }
+
+  if (cmd === 'publish') {
+    if (!out) throw new Error('--out <dir> is required');
+    const spec = parseSpec(one('model') ?? '');
+    const records = readJsonl<RunRecord>(paths(out).records);
+    const res = publishRecordings(records, { provider: spec.provider, modelId: spec.modelId, to: one('to') ?? 'apps/web/public/recordings' });
+    for (const f of res.written) console.log(`published ${f}`);
+    for (const r of res.refused) console.log(`REFUSED ${r}`);
+    return res.refused.length === 0 && res.written.length > 0 ? 0 : 1;
   }
 
   console.log(USAGE);
