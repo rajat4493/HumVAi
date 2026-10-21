@@ -26,4 +26,5 @@ M0 foundation (this deliverable, awaiting approval) → M1 playable vertical sli
 
 - M0: foundation, engine, five levels, visual prototype of level 1. See `docs/M0-HANDOVER.md`.
 - M0 review corrections: Level 3 recoverable (block drag), Level 5 rule change essential, Scout & Run budgets, experience review, AI opponent plan. See `docs/M0-CORRECTIONS.md`.
+- M1 preparation gate: AI experiment spec, Scout & Run A/B evaluation, rivalry UX spec, M1 work packages. See `docs/M1-PREP-HANDOVER.md`. Nothing implemented.
 - Approved in review: stay on Phaser 3.90, keep level order, keep minimal repo structure, keep visual direction provisionally.

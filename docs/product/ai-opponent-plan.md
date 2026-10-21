@@ -1,5 +1,7 @@
 # The AI opponent — plan for M1 and M2 (proposal; nothing here is implemented)
 
+> Elaborated for the M1 preparation gate in `docs/ai/experiment-spec.md` (experiment), `docs/design/rivalry-experience-spec.md` (UX) and `docs/product/m1-implementation-plan.md` (work packages). Where they differ, those documents win.
+
 Goal: Humans vs AI must be a contest between two kinds of intelligence, not puzzles with an AI badge. The AI is a real model acting through the same engine; the comparison must be fair, verifiable and presented without theatre.
 
 ## 1. Fairness model
