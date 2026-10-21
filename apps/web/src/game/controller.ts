@@ -31,8 +31,14 @@ export class GameController {
   constructor(
     parent: HTMLElement,
     private readonly challenge: ChallengeDefinition,
+    /** A run in progress to restore silently (engine replay), e.g. after a refresh. */
+    initialActions: GameAction[] = [],
   ) {
     this.state = create(challenge, 'human-session');
+    for (const a of initialActions) {
+      if (this.state.status !== 'playing') break;
+      if (step(this.state, a).valid) this.log.push(a);
+    }
     this.game = new Phaser.Game({
       type: Phaser.AUTO,
       parent,
@@ -49,6 +55,9 @@ export class GameController {
 
   private readonly onKey = (e: KeyboardEvent): void => {
     if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return; // holding a key must not burn budget
+    if (document.querySelector('[aria-modal="true"]')) return; // dialogs own the keyboard
+    const t = e.target;
+    if (t instanceof HTMLElement && (t.closest('button, input, select, textarea, [role="switch"], [role="radio"]') !== null) && (e.key === ' ' || e.key === 'Enter')) return; // let focused controls activate natively
     const dir = KEYS[e.key];
     if (dir) {
       e.preventDefault();

@@ -17,7 +17,7 @@
     "build": "npm run build --workspace @hva/web",
     "verify:levels": "npm run verify:levels --workspace @hva/game-core",
     "test:e2e": "playwright test --project=desktop --project=mobile",
-    "screenshots": "playwright test --config playwright.config.ts tests/e2e/screenshots.spec.ts",
+    "screenshots": "playwright test tests/e2e/screenshots.spec.ts tests/e2e/screens.spec.ts --project=desktop --project=mobile",
     "check": "npm run typecheck && npm run lint && npm test && npm run verify:levels && npm run build && npm run scan:bundle",
     "recordings": "playwright test tests/e2e/recording.spec.ts --project=rec-desktop --project=rec-mobile",
     "runner": "npm run runner --workspace @hva/runner --",

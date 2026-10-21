@@ -13,7 +13,8 @@
     "@hva/game-core": "*",
     "phaser": "3.90.0",
     "react": "19.2.9",
-    "react-dom": "19.2.9"
+    "react-dom": "19.2.9",
+    "@hva/ai-adapters": "*"
   },
   "devDependencies": {
     "@types/react": "19.2.2",

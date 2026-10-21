@@ -1,4 +1,14 @@
-export function Welcome({ onPlay }: { onPlay: () => void }) {
+import { GearIcon, TrophyIcon } from '../components/icons';
+
+interface Props {
+  hasProgress: boolean;
+  persistent: boolean;
+  onPlay: () => void;
+  onSettings: () => void;
+  onHall: () => void;
+}
+
+export function Welcome({ hasProgress, persistent, onPlay, onSettings, onHall }: Props) {
   return (
     <main className="welcome">
       <div>
@@ -8,10 +18,18 @@ export function Welcome({ onPlay }: { onPlay: () => void }) {
           <span className="ai-t">AI</span>
         </h1>
         <p>Strange little worlds. Hidden rules. Who figures them out first?</p>
-        <button className="btn" onClick={onPlay} autoFocus>
-          Play
+        <button className="btn" onClick={onPlay} data-autofocus autoFocus data-testid="play">
+          {hasProgress ? 'Continue' : 'Play'}
         </button>
-        <p className="sub">No account needed.</p>
+        <div className="welcome-links">
+          <button className="link-btn" data-testid="welcome-settings" onClick={onSettings}>
+            <GearIcon /> Settings
+          </button>
+          <button className="link-btn" data-testid="welcome-hall" onClick={onHall}>
+            <TrophyIcon /> Hall of Humanity
+          </button>
+        </div>
+        <p className="sub">{persistent ? 'No account needed. Progress is saved on this device.' : 'No account needed. This browser mode cannot save progress.'}</p>
       </div>
     </main>
   );

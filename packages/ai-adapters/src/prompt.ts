@@ -4,12 +4,17 @@ import type { ChatMessage } from './types';
 
 export const PROMPT_VERSION = 'hva.prompt.2';
 
-/** Identical for every world and every model. Hashed into every record. */
-export const SYSTEM_PROMPT = `You are playing a small puzzle game by choosing one action at a time.
+const INTRO = `You are playing a small puzzle game by choosing one action at a time.
 Each turn you receive the current state of the world, what your last action caused, and the actions
 that are legal right now. Reply with exactly one JSON object: {"action": <action>, "note": <optional short sentence>}.
 
-The world is a grid. '#' is wall, '.' is floor, '@' is you, 'E' is the exit. Other things are listed
+`;
+
+/**
+ * The rules of the game, in words. Shown to the model and, verbatim, to human players in How to play
+ * (decision D3: neither side has rules the other lacks).
+ */
+export const MANUAL = `The world is a grid. '#' is wall, '.' is floor, '@' is you, 'E' is the exit. Other things are listed
 as entities with an id, a kind and a state. Some of how this world behaves is not told to you. You can
 only find out by acting and watching what happens.
 
@@ -26,13 +31,18 @@ limited number of actions. The Run: a fresh world, strict action limit, RESET co
 reaching the exit during the Run. Reaching the exit while scouting wins nothing and does not end scouting:
 you stay in the practice world until you choose COMMIT (or your scouting actions run out).
 What you learned while scouting is yours to use in the Run; the world itself is reset.
-Your goal: reach the exit during the Run using as few actions as you can.
+Your goal: reach the exit during the Run using as few actions as you can.`;
+
+const FORMAT = `
 
 Action formats, for example:
 {"action": {"type": "MOVE", "direction": "RIGHT"}}
 {"action": {"type": "INTERACT", "targetId": "<id of an adjacent entity>"}}
 {"action": {"type": "RESET"}}
 {"action": {"type": "COMMIT"}}`;
+
+/** Identical for every world and every model. Hashed into every record. */
+export const SYSTEM_PROMPT = INTRO + MANUAL + FORMAT;
 
 /**
  * The only information a participant gets each turn: the level's briefing (same text a human reads),

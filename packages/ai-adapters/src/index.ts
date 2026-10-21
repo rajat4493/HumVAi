@@ -1,5 +1,5 @@
 export * from './types';
-export { PROMPT_VERSION, SYSTEM_PROMPT, buildMessages, buildTurnMessage } from './prompt';
+export { MANUAL, PROMPT_VERSION, SYSTEM_PROMPT, buildMessages, buildTurnMessage } from './prompt';
 export type { Turn } from './prompt';
 export { parseReply, NOTE_MAX } from './parse';
 export type { ParseResult } from './parse';

@@ -32,5 +32,4 @@ export const SWITCH_LOOK: Record<string, { shape: Shape; color: number }> = {
 };
 
 export const TILE = 96;
-export const prefersReducedMotion = (): boolean =>
-  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+export { reducedMotion as prefersReducedMotion } from '../lib/motion';

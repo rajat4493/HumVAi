@@ -14,6 +14,7 @@ test('welcome -> briefing -> play world 1 to victory in exactly 8 actions', asyn
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('HUMANS');
   await page.getByRole('button', { name: 'Play' }).click();
+  await page.getByTestId('node-w01-first-steps').click();
   await expect(page.getByRole('dialog', { name: 'Challenge briefing' })).toBeVisible();
   await page.getByRole('button', { name: 'Begin' }).click();
   await expect(page.locator('canvas')).toBeVisible();
@@ -32,7 +33,7 @@ test('welcome -> briefing -> play world 1 to victory in exactly 8 actions', asyn
 
 test('world 2: scout (with a wrong experiment), start the run, then win it', async ({ page, isMobile }) => {
   const errors = noErrors(page);
-  await page.goto('/?screen=arena&level=2');
+  await page.goto('/?screen=arena&level=2&unlock=all');
   await expect(page.getByTestId('phase')).toHaveText('Scout');
   await page.getByRole('button', { name: 'Start scouting' }).click();
 
@@ -57,7 +58,7 @@ test('world 2: scout (with a wrong experiment), start the run, then win it', asy
 });
 
 test('world 3: drag a block back off the plate (recoverable), then win', async ({ page, isMobile }) => {
-  await page.goto('/?screen=arena&briefing=0&level=3');
+  await page.goto('/?screen=arena&briefing=0&level=3&unlock=all');
   await play(page, 'DRR', !!isMobile); // block onto the plate
   expect((await state(page)).entities.find((e) => e.id === 'plate-garden')?.state).toBe('pressed');
   await play(page, 'I', !!isMobile); // drag it back
@@ -72,7 +73,7 @@ test('world 3: drag a block back off the plate (recoverable), then win', async (
 });
 
 test('world 5: the world visibly changes, and only then can it be won', async ({ page, isMobile }) => {
-  await page.goto('/?screen=arena&briefing=0&level=5');
+  await page.goto('/?screen=arena&briefing=0&level=5&unlock=all');
   // phase-0 strategy in the scout: open the gate, toggle switch-two next to the far door: nothing happens
   await play(page, 'R I RRRRRR I', !!isMobile);
   let s = await state(page);
@@ -94,7 +95,7 @@ test('world 5: the world visibly changes, and only then can it be won', async ({
 
 test('holding a key does not burn budget', async ({ page, isMobile }) => {
   test.skip(!!isMobile, 'keyboard only');
-  await page.goto('/?screen=arena&briefing=0');
+  await page.goto('/?screen=arena&briefing=0&unlock=all');
   await ready(page);
   for (let i = 0; i < 6; i++) await page.keyboard.down('ArrowRight');
   await page.keyboard.up('ArrowRight');
@@ -103,7 +104,7 @@ test('holding a key does not burn budget', async ({ page, isMobile }) => {
 
 test('layout has no horizontal scroll and the board is large enough on every world', async ({ page }) => {
   for (const level of [1, 3, 5]) {
-    await page.goto(`/?screen=arena&briefing=0&level=${level}`);
+    await page.goto(`/?screen=arena&briefing=0&level=${level}&unlock=all`);
     await expect(page.locator('canvas')).toBeVisible();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
@@ -114,7 +115,7 @@ test('layout has no horizontal scroll and the board is large enough on every wor
 
 test('touch targets on the pad are at least 44x44 CSS px', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'touch only');
-  await page.goto('/?screen=arena&briefing=0&level=2');
+  await page.goto('/?screen=arena&briefing=0&level=2&unlock=all');
   for (const name of ['Move up', 'Move down', 'Move left', 'Move right', 'Interact: toggle a switch or drag a block', 'Reset the world', 'Start the run']) {
     const box = await page.getByRole('button', { name, exact: true }).boundingBox();
     expect(box, name).not.toBeNull();
