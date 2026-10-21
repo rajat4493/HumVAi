@@ -123,7 +123,9 @@ export type GameEvent =
   | { type: 'PLATE_RELEASED'; id: string }
   | { type: 'EPOCH_CHANGED'; epoch: number }
   | { type: 'RESET' }
-  | { type: 'COMMITTED'; reason: 'player' | 'exit-found' | 'scout-spent' }
+  | { type: 'COMMITTED'; reason: 'player' | 'scout-spent' }
+  /** The player stands on the exit while scouting. Nothing is won and nothing starts: the player must COMMIT. */
+  | { type: 'EXIT_FOUND' }
   | { type: 'WON' }
   | { type: 'LOST' }
   | { type: 'REJECTED'; reason: string };

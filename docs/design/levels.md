@@ -7,7 +7,7 @@ Everything here is implemented in `packages/game-core/src/levels/*.ts` and machi
 
 **Grid.** Orthogonal, tile-based. Coordinates are `(x, y)` with `(0,0)` top-left. Every map is fully enclosed by walls.
 
-**Budget model: Scout & Run** (`docs/product/budget-model.md`). Each world has a Scout budget `E` (a sandbox where nothing can win or lose; `RESET` is free) and a Run budget `X` (the strict, scored attempt on a fresh world). Scouting ends on `COMMIT`, on reaching the exit, or when `E` is spent; the world then resets and the run begins. Worlds with `E = 0` start directly in the run.
+**Budget model: Scout & Run** (`docs/product/budget-model.md`). Each world has a Scout budget `E` (a sandbox where nothing can win or lose; `RESET` is free) and a Run budget `X` (the strict, scored attempt on a fresh world). Scouting ends on `COMMIT` or when `E` is spent (reaching the exit in Scout only reports `EXIT_FOUND`; the player commits explicitly); the world then resets and the run begins. Worlds with `E = 0` start directly in the run.
 
 **Actions** (identical for human and AI):
 
@@ -20,7 +20,7 @@ Everything here is implemented in `packages/game-core/src/levels/*.ts` and machi
 | `COMMIT` | End scouting, start the run (Scout only). | Free |
 | Rejected action (non-adjacent/unknown target, `COMMIT` in the run, anything after game end) | `valid:false`, world unchanged | No, but counted in `rejectedActions` |
 
-**Win:** the player stands on the exit tile **during the run** (checked before the budget, so winning on the last action is a win). Reaching the exit while scouting starts the run instead. **Lose:** `X` run actions spent without winning.
+**Win:** the player stands on the exit tile **during the run** (checked before the budget, so winning on the last action is a win). Reaching the exit while scouting wins nothing and does not end scouting. **Lose:** `X` run actions spent without winning.
 **Doors:** a door the player is standing in stays passable for them; doors block *entry* only. Blocks can never be pushed or dragged onto doors.
 **Plates:** pressed while the player *or a block* is on them. **Tripwires:** fire once when the player or a block first enters.
 **Determinism:** same level + same action list ⇒ identical outcome and identical `finalStateHash`.

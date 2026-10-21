@@ -321,7 +321,7 @@ export function stepInternal(s: GameState, action: GameAction): { next: GameStat
 }
 
 /** Ends scouting: world back to its start, run counters at zero, scouting spend remembered. */
-function beginRun(s: GameState, reason: 'player' | 'exit-found' | 'scout-spent'): GameEvent[] {
+function beginRun(s: GameState, reason: 'player' | 'scout-spent'): GameEvent[] {
   const fresh = initialState(s.challenge, s.seed);
   Object.assign(s, fresh, { phase: 'execute', scoutUsed: s.scoutUsed, runUsed: 0, rejectedActions: s.rejectedActions });
   return [{ type: 'COMMITTED', reason }];
@@ -335,9 +335,10 @@ function finish(
   const world = parseWorld(next.challenge);
   const atExit = eq(next.player, world.exit);
   if (next.phase === 'explore') {
-    // Scouting can never win. Finding the exit, or running out of scouting actions, starts the run.
-    if (atExit) events.push(...beginRun(next, 'exit-found'));
-    else if (next.scoutUsed >= next.challenge.budget.explore) events.push(...beginRun(next, 'scout-spent'));
+    // Scouting can never win. Standing on the exit is only reported (the player commits explicitly);
+    // running out of scouting actions still ends scouting.
+    if (atExit && next.scoutUsed < next.challenge.budget.explore) events.push({ type: 'EXIT_FOUND' });
+    if (next.scoutUsed >= next.challenge.budget.explore) events.push(...beginRun(next, 'scout-spent'));
   } else if (atExit) {
     next.status = 'won';
     events.push({ type: 'WON' });

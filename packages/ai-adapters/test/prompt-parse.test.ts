@@ -7,7 +7,7 @@ const sha = (s: string) => createHash('sha256').update(s).digest('hex');
 
 describe('prompt', () => {
   it('system prompt is frozen: any edit changes this hash and must bump the prompt version', () => {
-    expect(sha(SYSTEM_PROMPT)).toBe('e5d5c96926d29a12f10ca434e62dc0faa11915bcb271a6679398d68b4ac23461');
+    expect(sha(SYSTEM_PROMPT)).toBe('69916d7676fa662a929e0fc7aeb1b5abcd3a61cfa467f04be68d65c185c14b9c');
   });
 
   it('turn messages contain only public information, for every level at the start and after a move', () => {

@@ -2,7 +2,7 @@ import type { GameAction, GameEvent, PublicGameState } from '@hva/game-core';
 import { renderAscii } from '@hva/game-core';
 import type { ChatMessage } from './types';
 
-export const PROMPT_VERSION = 'hva.prompt.1';
+export const PROMPT_VERSION = 'hva.prompt.2';
 
 /** Identical for every world and every model. Hashed into every record. */
 export const SYSTEM_PROMPT = `You are playing a small puzzle game by choosing one action at a time.
@@ -23,7 +23,8 @@ Actions:
 
 The game has two phases. Scout: a practice world where nothing can be won or lost; RESET is free; you have a
 limited number of actions. The Run: a fresh world, strict action limit, RESET costs one action. You win by
-reaching the exit during the Run. Reaching the exit while scouting ends scouting and starts the Run.
+reaching the exit during the Run. Reaching the exit while scouting wins nothing and does not end scouting:
+you stay in the practice world until you choose COMMIT (or your scouting actions run out).
 What you learned while scouting is yours to use in the Run; the world itself is reset.
 Your goal: reach the exit during the Run using as few actions as you can.
 

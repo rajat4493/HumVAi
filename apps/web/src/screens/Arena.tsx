@@ -31,12 +31,12 @@ export function Arena({ challenge, index, total, skipBriefing, onNext }: Props) 
       const committed = s.events.find((e) => e.type === 'COMMITTED');
       if (committed && committed.type === 'COMMITTED') {
         setToast(
-          committed.reason === 'exit-found'
-            ? 'You found the exit. The world has reset: now do it for real.'
-            : committed.reason === 'scout-spent'
-              ? 'Scouting spent. The world has reset: the run begins.'
-              : 'The run begins. The world has reset; what you learned stays with you.',
+          committed.reason === 'scout-spent'
+            ? 'Scouting spent. The world has reset: the run begins.'
+            : 'The run begins. The world has reset; what you learned stays with you.',
         );
+      } else if (s.events.some((e) => e.type === 'EXIT_FOUND')) {
+        setToast('You found the exit. Keep experimenting, or press Start run when you are ready.');
       } else if (s.events.some((e) => e.type === 'NO_EFFECT')) {
         setToast('Nothing happened.');
       } else if (s.events.some((e) => e.type === 'EPOCH_CHANGED')) {
@@ -79,7 +79,7 @@ export function Arena({ challenge, index, total, skipBriefing, onNext }: Props) 
           )}
           {obs && current && <BudgetPips phase={phase} budget={current.budget} used={current.used} />}
           {phase === 'explore' && (
-            <button className="btn small" data-testid="start-run" onClick={() => ctl.current?.commit()}>
+            <button className={`btn small${obs && obs.player.x === obs.exit.x && obs.player.y === obs.exit.y ? ' ready' : ''}`} data-testid="start-run" onClick={() => ctl.current?.commit()}>
               Start run
             </button>
           )}

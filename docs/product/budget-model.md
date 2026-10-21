@@ -12,7 +12,7 @@ Every world has two numbers, **Scout** (`explore`) and **Run** (`execute`). Huma
 | World | A sandbox. Nothing here can win or lose | The real attempt on a fresh world |
 | Budget | `explore` actions (0 = no scouting) | `execute` actions |
 | `RESET` | **Free** | Costs 1 action |
-| Ends when | player sends `COMMIT` (Start run), **or** the player reaches the exit ("you found it, now do it for real"), **or** the scout budget is spent | exit reached (win) or run budget spent (loss) |
+| Ends when | player sends `COMMIT` (Start run), **or** the scout budget is spent. Reaching the exit in Scout only reports `EXIT_FOUND`; the player commits explicitly (owner decision, Stage 1) | exit reached (win) or run budget spent (loss) |
 | On ending | World resets to its start; scouting tally is kept; run counters start at 0 | — |
 
 What carries over from Scout to Run is **only what the participant remembers**. The world itself is reset, including doors, switches, blocks and any rule change. This is also what makes the AI comparison clean: the AI carries its scouting transcript; the human carries their memory.
@@ -46,5 +46,5 @@ Current values (all asserted by tests):
 ## Known weaknesses / open questions
 1. Levels 2–5 still have `E` ≥ optimal, so a player *can* rehearse the full route in Scout. That is intentional for teaching, but it means the run measures recall and execution there. Real strictness starts in M4 levels.
 2. Free reset in Scout cannot be abused for infinite experiments because every other action still spends Scout budget; an AI runner still needs a hard cap on total calls.
-3. Whether finding the exit in Scout should auto-start the run (current) or just show a marker is a feel question for playtests.
+3. ~~Auto-start on finding the exit~~ resolved by the owner: the player always commits explicitly (Stage 1).
 4. The AI card says "Scout 16 · Run 12" so the parity is visible to the player.

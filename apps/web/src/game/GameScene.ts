@@ -185,6 +185,10 @@ export class GameScene extends Phaser.Scene {
           }
           break;
         }
+        case 'EXIT_FOUND':
+          this.pulse(this.exit, 1.5);
+          this.celebrateSmall();
+          break;
         case 'COMMITTED':
           this.cameras.main.fadeIn(320, 11, 16, 38);
           break;
@@ -240,6 +244,14 @@ export class GameScene extends Phaser.Scene {
     const { x, y } = img;
     this.tweens.killTweensOf(img);
     this.tweens.add({ targets: img, x: x + dx * 9, y: y + dy * 9, duration: 70, yoyo: true, ease: 'Quad.out', onComplete: () => img.setPosition(x, y) });
+  }
+
+  /** Gentle 'you found it' ring for the Scout phase (the real celebration is saved for a won run). */
+  private celebrateSmall(): void {
+    if (this.reduced) return;
+    const ring = this.add.circle(this.exit.x, this.exit.y, 30, 0x5be38a, 0).setStrokeStyle(4, 0x5be38a, 0.9).setDepth(9998);
+    this.board.add(ring);
+    this.tweens.add({ targets: ring, scale: 2.4, alpha: 0, duration: 600, ease: 'Cubic.out', onComplete: () => ring.destroy() });
   }
 
   private celebrate(): void {

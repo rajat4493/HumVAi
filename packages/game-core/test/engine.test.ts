@@ -165,11 +165,30 @@ describe('Scout & Run budget model', () => {
     expect(legalActions(s)).not.toContainEqual(COMMIT);
   });
 
-  it('scouting can never win: reaching the exit starts the run instead', () => {
-    const { obs, events } = play({ ...l1, budget: { explore: 12, execute: 12 } }, mv('RRDDRRUU'));
+  it('scouting can never win, and reaching the exit does NOT start the run: the player must commit', () => {
+    const l = { ...l1, budget: { explore: 12, execute: 12 } };
+    const { obs, events, s } = play(l, mv('RRDDRRUU'));
     expect(events.some((e) => e.type === 'WON')).toBe(false);
-    expect(events.at(-1)).toEqual({ type: 'COMMITTED', reason: 'exit-found' });
+    expect(events.at(-1)).toEqual({ type: 'EXIT_FOUND' });
+    expect(events.some((e) => e.type === 'COMMITTED')).toBe(false);
     expect(obs.status).toBe('playing');
+    expect(obs.phase).toBe('explore');
+    expect(obs.player).toEqual(obs.exit);
+    expect(obs.scout.used).toBe(8);
+    // the player can keep experimenting from the exit, then commits explicitly
+    const stepped = step(s, { type: 'MOVE', direction: 'DOWN' });
+    expect(stepped.events.some((e) => e.type === 'EXIT_FOUND')).toBe(false);
+    const committed = step(s, COMMIT);
+    expect(committed.events).toEqual([{ type: 'COMMITTED', reason: 'player' }]);
+    expect(committed.state.phase).toBe('execute');
+    expect(committed.state.player).toEqual({ x: 1, y: 1 });
+  });
+
+  it('reaching the exit with the last scouting action still ends scouting (budget spent)', () => {
+    const l = { ...l1, budget: { explore: 8, execute: 12 } };
+    const { obs, events } = play(l, mv('RRDDRRUU'));
+    expect(events.at(-1)).toEqual({ type: 'COMMITTED', reason: 'scout-spent' });
+    expect(events.some((e) => e.type === 'EXIT_FOUND')).toBe(false);
     expect(obs.phase).toBe('execute');
   });
 
@@ -192,7 +211,7 @@ describe('Scout & Run budget model', () => {
       [l2, [...mv('RRDD'), use('switch-teal'), ...mv('U'), use('switch-orange'), COMMIT]],
       [l3, [...mv('RRRD'), ...mv('U'), ...mv('D'), RESET, ...mv('DRR'), use('block-purple'), COMMIT]],
       [l4, [...mv('RRRRR'), use('switch-triangle'), ...mv('LLLL'), use('switch-circle'), COMMIT]],
-      [l5, [...mv('R'), use('switch-one'), ...mv('RRRDRR'), use('switch-two'), ...mv('URRR')]],
+      [l5, [...mv('R'), use('switch-one'), ...mv('RRRDRR'), use('switch-two'), ...mv('URRR'), COMMIT]],
     ];
     for (const [l, scout] of plans) {
       const optimal = solve(l).optimalSolution as GameAction[];

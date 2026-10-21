@@ -84,7 +84,12 @@ test('world 5: the world visibly changes, and only then can it be won', async ({
   expect(s.entities.find((e) => e.id === 'door-far')?.state).toBe('open'); // switch-two was already on
   await play(page, 'URRRR', !!isMobile);
   s = await state(page);
-  expect(s).toMatchObject({ phase: 'execute', run: { used: 0 } }); // exit found while scouting -> run begins
+  // standing on the exit while scouting does NOT start the run: the player commits explicitly
+  expect(s).toMatchObject({ phase: 'explore', status: 'playing', player: { x: 10, y: 1 } });
+  await expect(page.getByRole('status')).toContainText('found the exit');
+  await play(page, 'C', !!isMobile);
+  s = await state(page);
+  expect(s).toMatchObject({ phase: 'execute', run: { used: 0 }, player: { x: 1, y: 1 } });
 });
 
 test('holding a key does not burn budget', async ({ page, isMobile }) => {

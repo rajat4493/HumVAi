@@ -614,3 +614,21 @@ h3,
     display: none; /* keyboard hints are noise on touch devices */
   }
 }
+
+.btn.ready {
+  animation: ready-pulse 1.1s ease-in-out infinite;
+}
+@keyframes ready-pulse {
+  50% {
+    transform: scale(1.07);
+    box-shadow:
+      0 4px 0 var(--human-deep),
+      0 0 30px rgb(255 179 71 / 0.75);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn.ready {
+    animation: none;
+    outline: 3px solid var(--exit);
+  }
+}
