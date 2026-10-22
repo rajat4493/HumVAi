@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { CAMPAIGN_ORDER } from '@hva/game-core';
 import { play, ready, state } from './helpers';
 
 const WIN1 = 'RRDDRRUU';
@@ -6,7 +7,7 @@ const WIN1 = 'RRDDRRUU';
 test('fresh start: only world 1 is open; winning it unlocks world 2, saves, and earns achievements that survive a reload', async ({ page, isMobile }) => {
   await page.goto('/');
   await page.getByTestId('play').click();
-  await expect(page.getByTestId('progress-summary')).toHaveText('0 of 5 worlds finished');
+  await expect(page.getByTestId('progress-summary')).toHaveText(`0 of ${CAMPAIGN_ORDER.length} worlds finished`);
   await expect(page.getByTestId('node-w01-first-steps')).toBeEnabled();
   await expect(page.getByTestId('node-w02-orange-switch')).toBeDisabled();
 
@@ -19,13 +20,13 @@ test('fresh start: only world 1 is open; winning it unlocks world 2, saves, and 
   await expect(result).toContainText('Achievement: Out of the Garden');
   await result.getByRole('button', { name: 'Map' }).click();
 
-  await expect(page.getByTestId('progress-summary')).toHaveText('1 of 5 worlds finished');
+  await expect(page.getByTestId('progress-summary')).toHaveText(`1 of ${CAMPAIGN_ORDER.length} worlds finished`);
   await expect(page.getByTestId('node-w02-orange-switch')).toBeEnabled();
   await expect(page.getByTestId('node-w01-first-steps')).toContainText('Shortest possible');
 
   await page.reload();
   await page.getByTestId('play').click();
-  await expect(page.getByTestId('progress-summary')).toHaveText('1 of 5 worlds finished');
+  await expect(page.getByTestId('progress-summary')).toHaveText(`1 of ${CAMPAIGN_ORDER.length} worlds finished`);
   await page.getByTestId('hall-button').click();
   await expect(page.getByTestId('hall-count')).toHaveText('2 of 10 earned');
   await expect(page.getByTestId('ach-first-exit')).toContainText('Out of the Garden');
@@ -69,7 +70,7 @@ test('hints mark the run assisted: the world is completed but no personal best o
   await expect(result).not.toContainText('Achievement:');
   await result.getByRole('button', { name: 'Map' }).click();
   await expect(page.getByTestId('node-w01-first-steps')).toContainText('assisted');
-  await expect(page.getByTestId('progress-summary')).toHaveText('1 of 5 worlds finished');
+  await expect(page.getByTestId('progress-summary')).toHaveText(`1 of ${CAMPAIGN_ORDER.length} worlds finished`);
   await page.getByTestId('hall-button').click();
   await expect(page.getByTestId('hall-count')).toHaveText('0 of 10 earned');
 });
@@ -97,13 +98,13 @@ test('settings persist, motion override applies, and reset erases progress after
   await page.getByRole('button', { name: 'Keep my progress' }).click();
   await page.getByTestId('settings-back').click();
   await page.getByTestId('play').click();
-  await expect(page.getByTestId('progress-summary')).toHaveText('1 of 5 worlds finished');
+  await expect(page.getByTestId('progress-summary')).toHaveText(`1 of ${CAMPAIGN_ORDER.length} worlds finished`);
 
   await page.getByTestId('settings-button').click();
   await page.getByTestId('reset-progress').click();
   await page.getByTestId('confirm-reset').click();
   await page.getByTestId('settings-back').click();
-  await expect(page.getByTestId('progress-summary')).toHaveText('0 of 5 worlds finished');
+  await expect(page.getByTestId('progress-summary')).toHaveText(`0 of ${CAMPAIGN_ORDER.length} worlds finished`);
   await page.getByTestId('settings-button').click();
   await expect(page.getByTestId('sound-toggle')).toHaveAttribute('aria-checked', 'false'); // settings are kept on reset
 });
@@ -147,6 +148,6 @@ test('the game still works when browser storage is blocked (plays from memory, n
   await play(page, WIN1, !!isMobile);
   await expect(page.getByRole('dialog', { name: 'Result' })).toContainText('You made it out');
   await page.getByRole('dialog', { name: 'Result' }).getByRole('button', { name: 'Map' }).click();
-  await expect(page.getByTestId('progress-summary')).toHaveText('1 of 5 worlds finished');
+  await expect(page.getByTestId('progress-summary')).toHaveText(`1 of ${CAMPAIGN_ORDER.length} worlds finished`);
   expect(errors).toEqual([]);
 });

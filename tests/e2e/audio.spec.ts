@@ -14,7 +14,7 @@ const audio = (page: Page) =>
   });
 
 test('audio stays silent until the first gesture, then plays the right cues for real actions', async ({ page, isMobile }) => {
-  await page.goto('/?screen=arena&level=3&unlock=all&briefing=0');
+  await page.goto('/?screen=arena&level=w03-locked-garden&unlock=all&briefing=0');
   await ready(page);
   expect(await audio(page)).toMatchObject({ unlocked: false, played: [], state: 'none' });
 

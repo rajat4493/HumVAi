@@ -40,6 +40,22 @@ export const CAMPAIGN: readonly Chapter[] = [
           'Switch on the orange circle, then walk through the door.',
         ],
       },
+      {
+        levelId: 'w06-both-needed',
+        hints: [
+          'A switch at each end of the corridor, and one in the middle. Try them and watch the door.',
+          'The door opens only when both end switches are on. The middle one does nothing.',
+          'Switch on the left end, walk to the right end and switch that on, then take the door.',
+        ],
+      },
+      {
+        levelId: 'w07-off-is-on',
+        hints: [
+          'Both switches already glow, yet the door is shut. Maybe lit is not what it wants.',
+          'The door opens when exactly one of the two switches is on.',
+          'Walk right and switch one of them off (the yellow square works), then take the door.',
+        ],
+      },
     ],
   },
   {
@@ -61,6 +77,45 @@ export const CAMPAIGN: readonly Chapter[] = [
           'A switch that does nothing is telling you something.',
           'The triangle only works while the circle is off. The square undoes the door.',
           'Switch the circle off, switch the triangle on, and leave the square alone.',
+        ],
+      },
+      {
+        levelId: 'w11-corner-piece',
+        hints: [
+          'The plate sits in a niche below the room. The block has to arrive from above.',
+          'Push the block along the top row, then climb over it and push it down.',
+          'Push the block right until it is above the plate, go around over the top, push it down, then return left and take the door.',
+        ],
+      },
+      {
+        levelId: 'w08-heavy-load',
+        hints: [
+          'Two plates, two blocks. The door may want more than one thing at once.',
+          'Both plates must be held down at the same time. Each block belongs on its own plate.',
+          'Push the upper block onto its plate, return, push the lower block onto its plate, then take the door.',
+        ],
+      },
+    ],
+  },
+  {
+    id: 'ch3',
+    name: 'The Strategist',
+    blurb: 'Plan before you move. Budgets tighten and order matters.',
+    levels: [
+      {
+        levelId: 'w09-hold-the-line',
+        hints: [
+          'The switch does nothing when you try it. Something has to be true first.',
+          'The switch only responds while the pressure plate is held down. Use the block.',
+          'Push the block right onto the plate, go around to the switch and flip it, then take the door.',
+        ],
+      },
+      {
+        levelId: 'w10-in-order',
+        hints: [
+          'Two of these switches refuse to move at first. Notice which, and what changes once you succeed.',
+          'Each stubborn switch wakes up when the one before it is on. The door dislikes the first switch being left on.',
+          'Switch on the first, then the second, then turn the first off again. Walk right, switch on the third, and take the door.',
         ],
       },
     ],

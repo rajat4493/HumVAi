@@ -109,10 +109,10 @@ export function Settings({ save, store, onBack }: Props) {
         <h3>Controls</h3>
         <ul className="controls">
           <li>
-            <b>Keyboard:</b> arrows or WASD to move, Space to interact, R to reset, C to start the run.
+            <b>Keyboard:</b> arrows or WASD to move, Space to interact (Shift + an arrow interacts with the switch or block on that side), R to reset, C to start the run.
           </li>
           <li>
-            <b>Touch:</b> the on-screen pad, or swipe on the board.
+            <b>Touch:</b> the on-screen pad, swipe on the board, or tap a nearby switch or block to use it.
           </li>
         </ul>
       </section>

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { CAMPAIGN_ORDER } from '@hva/game-core';
 import type { Page } from '@playwright/test';
 import { play, ready, state } from './helpers';
 
@@ -58,7 +59,7 @@ test('world 2: scout (with a wrong experiment), start the run, then win it', asy
 });
 
 test('world 3: drag a block back off the plate (recoverable), then win', async ({ page, isMobile }) => {
-  await page.goto('/?screen=arena&briefing=0&level=3&unlock=all');
+  await page.goto('/?screen=arena&briefing=0&level=w03-locked-garden&unlock=all');
   await play(page, 'DRR', !!isMobile); // block onto the plate
   expect((await state(page)).entities.find((e) => e.id === 'plate-garden')?.state).toBe('pressed');
   await play(page, 'I', !!isMobile); // drag it back
@@ -73,7 +74,7 @@ test('world 3: drag a block back off the plate (recoverable), then win', async (
 });
 
 test('world 5: the world visibly changes, and only then can it be won', async ({ page, isMobile }) => {
-  await page.goto('/?screen=arena&briefing=0&level=5&unlock=all');
+  await page.goto('/?screen=arena&briefing=0&level=w05-garden-shifts&unlock=all');
   // phase-0 strategy in the scout: open the gate, toggle switch-two next to the far door: nothing happens
   await play(page, 'R I RRRRRR I', !!isMobile);
   let s = await state(page);
@@ -103,7 +104,7 @@ test('holding a key does not burn budget', async ({ page, isMobile }) => {
 });
 
 test('layout has no horizontal scroll and the board is large enough on every world', async ({ page }) => {
-  for (const level of [1, 3, 5]) {
+  for (const level of CAMPAIGN_ORDER) {
     await page.goto(`/?screen=arena&briefing=0&level=${level}&unlock=all`);
     await expect(page.locator('canvas')).toBeVisible();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);

@@ -72,12 +72,15 @@ export function parseSession(raw: string | null): Session | null {
 
 export const progressOf = (s: SaveData, id: string): LevelProgress => s.levels[id] ?? emptyProgress();
 
-/** A world is playable when it is first in the campaign or the previous one is completed. */
+/**
+ * A world is playable when it is first in the campaign, the previous one is completed, or it (or any later world) is already
+ * completed. The last clause keeps older saves playable when levels are inserted before worlds they had finished.
+ */
 export function isUnlocked(s: SaveData, id: string, opts: { unlockAll?: boolean } = {}): boolean {
   if (opts.unlockAll) return true;
   const i = CAMPAIGN_ORDER.indexOf(id);
   if (i < 0) return false;
-  return i === 0 || progressOf(s, CAMPAIGN_ORDER[i - 1] as string).completed;
+  return i === 0 || progressOf(s, CAMPAIGN_ORDER[i - 1] as string).completed || CAMPAIGN_ORDER.slice(i).some((x) => progressOf(s, x).completed);
 }
 
 export const completedCount = (s: SaveData): number => CAMPAIGN_ORDER.filter((id) => progressOf(s, id).completed).length;

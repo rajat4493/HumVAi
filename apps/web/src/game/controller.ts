@@ -13,7 +13,13 @@ const KEYS: Record<string, Direction> = {
   s: 'DOWN',
   a: 'LEFT',
   d: 'RIGHT',
+  W: 'UP',
+  S: 'DOWN',
+  A: 'LEFT',
+  D: 'RIGHT',
 };
+
+const DELTA: Record<Direction, { x: number; y: number }> = { UP: { x: 0, y: -1 }, DOWN: { x: 0, y: 1 }, LEFT: { x: -1, y: 0 }, RIGHT: { x: 1, y: 0 } };
 
 /** What the scene needs from whoever drives it: live play (GameController) or a recorded replay. */
 export interface BoardController {
@@ -22,6 +28,8 @@ export interface BoardController {
   attach(scene: GameScene): void;
   dispatch(action: GameAction): StepResult | null;
   interact(): void;
+  /** Optional: a tap on a board tile. Interacts with whatever stands there when it is adjacent. */
+  interactAt?(x: number, y: number): void;
 }
 
 export interface Snapshot {
@@ -40,6 +48,8 @@ export class GameController implements BoardController {
   private game: Phaser.Game;
   private listeners = new Set<(s: Snapshot) => void>();
   readonly log: GameAction[] = [];
+  /** The way the player last tried to move; Interact prefers the target in that direction. */
+  private facing: Direction | null = null;
 
   constructor(
     parent: HTMLElement,
@@ -54,7 +64,7 @@ export class GameController implements BoardController {
     }
     this.game = createBoard(parent, this);
     window.addEventListener('keydown', this.onKey);
-    (window as unknown as { __HVA__: unknown }).__HVA__ = { getState: () => observe(this.state), log: this.log };
+    (window as unknown as { __HVA__: unknown }).__HVA__ = { getState: () => observe(this.state), log: this.log, tileCenter: (x: number, y: number) => this.scene?.tileCenterClient(x, y) ?? null };
   }
 
   private readonly onKey = (e: KeyboardEvent): void => {
@@ -63,7 +73,11 @@ export class GameController implements BoardController {
     const t = e.target;
     if (t instanceof HTMLElement && (t.closest('button, input, select, textarea, [role="switch"], [role="radio"]') !== null) && (e.key === ' ' || e.key === 'Enter')) return; // let focused controls activate natively
     const dir = KEYS[e.key];
-    if (dir) {
+    if (dir && e.shiftKey) {
+      // Shift + direction: interact with the switch or block on that side, at no extra cost
+      e.preventDefault();
+      this.interactToward(dir);
+    } else if (dir) {
       e.preventDefault();
       this.dispatch({ type: 'MOVE', direction: dir });
     } else if (e.key === ' ' || e.key === 'e') {
@@ -94,6 +108,7 @@ export class GameController implements BoardController {
 
   dispatch(action: GameAction): StepResult | null {
     if (this.state.status !== 'playing') return null;
+    if (action.type === 'MOVE') this.facing = action.direction;
     const result = step(this.state, action);
     if (result.valid) this.log.push(action);
     this.scene?.present(result.events, result.state);
@@ -101,10 +116,34 @@ export class GameController implements BoardController {
     return result;
   }
 
-  /** Interacts with the adjacent switch; with several adjacent, the first (stable order). */
+  /**
+   * Interacts with the adjacent switch or block the player is facing (the last way they pressed a direction);
+   * with nothing in that direction, the first adjacent one. Standing between two switches therefore works:
+   * face one and press Interact, face the other and press Interact.
+   */
   interact(): void {
-    const target = legalActions(this.state).find((a) => a.type === 'INTERACT');
-    if (target) this.dispatch(target);
+    const options = legalActions(this.state).filter((a): a is Extract<GameAction, { type: 'INTERACT' }> => a.type === 'INTERACT');
+    if (options.length === 0) return;
+    const obs = observe(this.state);
+    const ahead = this.facing ? { x: obs.player.x + DELTA[this.facing].x, y: obs.player.y + DELTA[this.facing].y } : null;
+    const faced = ahead && options.find((a) => {
+      const e = obs.entities.find((x) => x.id === a.targetId);
+      return e && e.pos.x === ahead.x && e.pos.y === ahead.y;
+    });
+    this.dispatch(faced ?? (options[0] as GameAction));
+  }
+
+  interactToward(dir: Direction): void {
+    const obs = observe(this.state);
+    this.interactAt(obs.player.x + DELTA[dir].x, obs.player.y + DELTA[dir].y);
+  }
+
+  interactAt(x: number, y: number): void {
+    const obs = observe(this.state);
+    const e = obs.entities.find((n) => n.pos.x === x && n.pos.y === y && (n.kind === 'switch' || n.kind === 'block'));
+    if (!e) return;
+    if (Math.abs(obs.player.x - x) + Math.abs(obs.player.y - y) !== 1) return;
+    this.dispatch({ type: 'INTERACT', targetId: e.id });
   }
 
   commit(): void {

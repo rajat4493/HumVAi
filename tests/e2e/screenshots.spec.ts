@@ -35,7 +35,7 @@ test('experience walkthrough', async ({ page }, info) => {
   await shot('06-w2-run-begins-world-reset', 700);
 
   // World 3: block on the plate, door open
-  await page.goto('/?screen=arena&briefing=0&level=3&unlock=all');
+  await page.goto('/?screen=arena&briefing=0&level=w03-locked-garden&unlock=all');
   await ready(page);
   await play(page, 'DRR', touch);
   await shot('07-w3-block-on-plate');
@@ -43,13 +43,13 @@ test('experience walkthrough', async ({ page }, info) => {
   await shot('08-w3-walking-through-open-door');
 
   // World 4: the jammed switch
-  await page.goto('/?screen=arena&briefing=0&level=4&unlock=all');
+  await page.goto('/?screen=arena&briefing=0&level=w04-only-when&unlock=all');
   await ready(page);
   await play(page, 'RRRRR I', touch);
   await shot('09-w4-jammed-switch', 250);
 
   // World 5: the world changes
-  await page.goto('/?screen=arena&briefing=0&level=5&unlock=all');
+  await page.goto('/?screen=arena&briefing=0&level=w05-garden-shifts&unlock=all');
   await ready(page);
   await play(page, 'R I RRRDR', touch, 30);
   await shot('10-w5-world-changed', 350);

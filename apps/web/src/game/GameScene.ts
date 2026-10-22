@@ -41,10 +41,23 @@ export class GameScene extends Phaser.Scene {
       const dx = p.x - down.x;
       const dy = p.y - down.y;
       down = null;
-      if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) {
+        // a tap: interact with the adjacent switch or block on that tile
+        const size = TILE * this.board.scaleX;
+        this.ctl.interactAt?.(Math.floor((p.x - this.board.x) / size), Math.floor((p.y - this.board.y) / size));
+        return;
+      }
       const dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'RIGHT' : 'LEFT') : dy > 0 ? 'DOWN' : 'UP';
       this.ctl.dispatch({ type: 'MOVE', direction: dir });
     });
+  }
+
+  /** Page (client) coordinates of a tile centre: lets tests and tools tap exactly where a player would. */
+  tileCenterClient(x: number, y: number): { x: number; y: number } {
+    const rect = this.game.canvas.getBoundingClientRect();
+    const k = rect.width / this.scale.width;
+    const size = TILE * this.board.scaleX;
+    return { x: rect.left + (this.board.x + (x + 0.5) * size) * k, y: rect.top + (this.board.y + (y + 0.5) * size) * k };
   }
 
   private cell(x: number, y: number): { x: number; y: number } {

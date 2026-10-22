@@ -40,17 +40,17 @@ describe('experiment execution', () => {
     const dir = tmp();
     const opts = { adapters: [perLevelScripted()], levels: levelsById(undefined), attemptsPerLevel: 2, outDir: dir, version: 'test', maxTotalTokens: 1e9 };
     const first = await runExperiment(opts);
-    expect(first.completed).toHaveLength(10);
+    expect(first.completed).toHaveLength(LEVELS.length * 2);
     const records = readJsonl<RunRecord>(paths(dir).records);
-    expect(records).toHaveLength(10);
+    expect(records).toHaveLength(LEVELS.length * 2);
     expect(records.every((r) => r.outcome.status === 'won')).toBe(true);
     for (const r of records) expect(verifyRecord(r, LEVELS.find((l) => l.id === r.challengeId)!).ok).toBe(true);
     expect(readJsonl(paths(dir).meta).every((m) => (m as { verified: boolean }).verified)).toBe(true);
     const order = records.map((r) => r.challengeId);
     expect(order).not.toEqual([...order].sort()); // interleaved, not grouped by world
     const second = await runExperiment(opts);
-    expect(second.skipped).toBe(10);
-    expect(readJsonl(paths(dir).records)).toHaveLength(10);
+    expect(second.skipped).toBe(LEVELS.length * 2);
+    expect(readJsonl(paths(dir).records)).toHaveLength(LEVELS.length * 2);
   });
 
   it('the shuffled order is deterministic for a given seed', async () => {

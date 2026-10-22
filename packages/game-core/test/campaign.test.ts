@@ -26,10 +26,11 @@ describe('campaign table', () => {
   });
 
   it('keeps the planned chapter identities and navigation helpers', () => {
-    expect(CAMPAIGN.map((c) => c.name)).toEqual(['Awakening', 'The Unknown', 'Adaptation']);
+    expect(CAMPAIGN.map((c) => c.name)).toEqual(['Awakening', 'The Unknown', 'The Strategist', 'Adaptation']);
     expect(campaignEntry('w05-garden-shifts')?.chapter.id).toBe('ch4');
     expect(nextLevelId('w01-first-steps')).toBe('w02-orange-switch');
-    expect(nextLevelId('w05-garden-shifts')).toBeNull();
+    expect(nextLevelId('w02-orange-switch')).toBe('w06-both-needed');
+    expect(nextLevelId(CAMPAIGN_ORDER[CAMPAIGN_ORDER.length - 1] as string)).toBeNull();
   });
 
   it('the route hint for World 1 really is a winning route', () => {

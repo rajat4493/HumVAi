@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { GameAction } from '@hva/game-core';
-import { analyzeRun, levelById, solve } from '@hva/game-core';
+import { CAMPAIGN_ORDER, analyzeRun, levelById, solve } from '@hva/game-core';
 import { completedCount, emptySave, isUnlocked, parseSave, parseSession, recordLoss, recordWin, withSettings } from './save';
 import { SaveStore, pickStorage } from './store';
 import { SAVE_KEY, SESSION_KEY } from './types';
@@ -58,9 +58,16 @@ describe('save data', () => {
     expect(second.save.levels['w01-first-steps']!.wins).toBe(2);
   });
 
+  it('older saves stay playable when levels are inserted before worlds they already finished', () => {
+    const s = win(emptySave(), 'w05-garden-shifts').save;
+    expect(isUnlocked(s, 'w05-garden-shifts')).toBe(true);
+    expect(isUnlocked(s, CAMPAIGN_ORDER[CAMPAIGN_ORDER.indexOf('w05-garden-shifts') - 1] as string)).toBe(true);
+    expect(isUnlocked(emptySave(), 'w05-garden-shifts')).toBe(false);
+  });
+
   it('aggregate achievements: three unassisted worlds, and every world', () => {
     let s = emptySave();
-    const ids = ['w01-first-steps', 'w02-orange-switch', 'w03-locked-garden', 'w04-only-when', 'w05-garden-shifts'];
+    const ids = [...CAMPAIGN_ORDER];
     let earned: string[] = [];
     for (const id of ids) {
       const r = win(s, id);
@@ -69,7 +76,7 @@ describe('save data', () => {
     }
     expect(earned).toContain('no-help');
     expect(earned).toContain('every-world');
-    expect(completedCount(s)).toBe(5);
+    expect(completedCount(s)).toBe(CAMPAIGN_ORDER.length);
   });
 
   it('losses count attempts without completing anything', () => {

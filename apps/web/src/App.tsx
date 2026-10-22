@@ -15,13 +15,14 @@ type Screen = { name: 'welcome' } | { name: 'map' } | { name: 'settings'; from: 
 
 /**
  * Screens: Welcome -> World map -> Briefing/Arena/Result, plus Settings and the Hall of Humanity.
- * Developer switches (screenshots, tests): ?screen=arena&level=N&briefing=0, ?unlock=all
+ * Developer switches (screenshots, tests): ?screen=arena&level=N|level-id&briefing=0, ?unlock=all
  */
 export function App() {
   const params = new URLSearchParams(window.location.search);
   const save = useSave();
   const unlockAll = params.get('unlock') === 'all';
-  const devLevel = CAMPAIGN_ORDER[Math.min(Math.max(Number(params.get('level') ?? 1), 1), LEVELS.length) - 1];
+  const levelParam = params.get('level') ?? '1';
+  const devLevel = CAMPAIGN_ORDER.includes(levelParam) ? levelParam : CAMPAIGN_ORDER[Math.min(Math.max(Number(levelParam) || 1, 1), LEVELS.length) - 1];
   const [screen, setScreen] = useState<Screen>(() => {
     if (params.get('screen') === 'arena' && devLevel) return { name: 'play', levelId: devLevel };
     if (params.get('screen') === 'map') return { name: 'map' };

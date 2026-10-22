@@ -253,7 +253,7 @@ export function Arena({ challenge, index, total, store, skipBriefing, onMap, onN
           )}
           <p className="legend">
             <span>Arrows / WASD: move</span>
-            <span>Space: interact</span>
+            <span>Space: interact (Shift+arrow picks a side)</span>
             <span>R: reset</span>
             {scouts && <span>C: start run</span>}
           </p>
