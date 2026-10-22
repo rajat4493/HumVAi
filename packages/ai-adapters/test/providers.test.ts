@@ -178,3 +178,11 @@ describe('full attempts through the HTTP adapters', () => {
     expect(verifyRecord(record, l).ok).toBe(true);
   });
 });
+
+describe('anthropic adapter and removed sampling parameters', () => {
+  it('refuses a temperature or top_p up front, because the Messages API rejects them', () => {
+    expect(() => anthropicAdapter({ apiKey: 'k', modelId: 'm', sampling: { temperature: 0 } })).toThrow(/no longer accepts temperature/);
+    expect(() => anthropicAdapter({ apiKey: 'k', modelId: 'm', sampling: { topP: 0.9 } })).toThrow(/no longer accepts temperature or top_p/);
+    expect(() => anthropicAdapter({ apiKey: 'k', modelId: 'm' })).not.toThrow();
+  });
+});

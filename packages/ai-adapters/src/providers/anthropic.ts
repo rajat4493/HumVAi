@@ -22,6 +22,11 @@ export function anthropicAdapter(o: AnthropicOptions): ModelAdapter {
   const maxTokens = o.sampling?.maxOutputTokens ?? o.maxTokens ?? 16_000;
   const sampling: SamplingConfig = { reasoning: { mode: 'default' }, ...o.sampling, maxOutputTokens: maxTokens };
   const http = o.http ?? defaultHttp;
+  // From 2026-10-21 the Messages API rejects temperature / top_p / top_k with a 400 on every model: refuse early and clearly
+  // instead of burning a call (and a run record) on a request that cannot succeed.
+  if (sampling.temperature !== undefined || sampling.topP !== undefined) {
+    throw new AdapterError('config', 'the Anthropic Messages API no longer accepts temperature or top_p; remove them from the sampling config');
+  }
   return {
     identity,
     sampling,
@@ -32,8 +37,6 @@ export function anthropicAdapter(o: AnthropicOptions): ModelAdapter {
         system: req.system,
         messages: req.messages,
       };
-      if (sampling.temperature !== undefined) body.temperature = sampling.temperature;
-      if (sampling.topP !== undefined) body.top_p = sampling.topP;
       const r = await httpJson(
         `${base}/v1/messages`,
         { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': o.apiKey, 'anthropic-version': API_VERSION }, body: JSON.stringify(body) },

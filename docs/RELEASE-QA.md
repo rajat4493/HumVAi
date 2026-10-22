@@ -2,7 +2,7 @@
 
 Status of the build on `claude/humans-vs-ai-plan-fz5yq0`. This separates what a machine has checked from what only people, other browsers, real devices or real providers can check. **The game is not declared production-ready**; the unmet gates are listed at the end.
 
-## Verified by automated checks (latest run: 229 unit tests, 109 browser tests, 3 skipped by design)
+## Verified by automated checks (latest run: 244 unit tests, 113 browser tests, 5 skipped by design)
 | Area | Evidence |
 |---|---|
 | Rules engine, solver, replay | 229 unit tests; every world solvable within budget, 0 dead states, replay-verified (`npm run verify:levels`, `docs/verification/solvability-report.md`) |
@@ -18,6 +18,9 @@ Status of the build on `claude/humans-vs-ai-plan-fz5yq0`. This separates what a 
 
 ## Screenshots reviewed this pass
 Phone (390x780) and desktop (1280x760): the world map (twenty worlds, four per row), Worlds 5, 9, 10, 16, 17, 19 and 20, the interaction ring beside a switch, and the ending screen. Findings acted on: tile size on 10-wide boards (padding tightened), orphaned row on the map, the finale layout. Not reviewed visually: every world on every device.
+
+## Added in the v1.0 completion pass
+Opt-in local telemetry (off by default, no upload, replay-verifiable export), cost estimator and pilot runbook for the first real AI attempt, a playtest protocol and analyser, a Firefox/WebKit CI job, and a per-claim `docs/VERIFICATION-LEDGER.md`. Gameplay is unchanged.
 
 ## Not verified (needs people, devices, accounts or providers)
 - **Human playtesting: none.** Enjoyment, difficulty, clarity of hints and the ending are untested. Budgets are cheap to retune (version bump).

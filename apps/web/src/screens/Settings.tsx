@@ -4,6 +4,8 @@ import { BackIcon } from '../components/icons';
 import { Modal } from '../components/Modal';
 import { applyMotion } from '../lib/motion';
 import { withSettings } from '../save/save';
+import { telemetry, useTelemetry } from '../telemetry/instance';
+import { POLICY_VERSION } from '../telemetry/types';
 import type { SaveStore } from '../save/store';
 import type { SaveData, Settings as SettingsData } from '../save/types';
 
@@ -51,6 +53,16 @@ export function Settings({ save, store, onBack }: Props) {
     if (p.motion) applyMotion(p.motion);
   };
   const blocks = manualBlocks(MANUAL);
+  const t = useTelemetry();
+  const download = () => {
+    const blob = new Blob([JSON.stringify(telemetry.export(), null, 1)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'humans-vs-ai-my-gameplay.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
   return (
     <main className="panel-screen" aria-label="Settings">
       <header className="map-head">
@@ -125,6 +137,32 @@ export function Settings({ save, store, onBack }: Props) {
         <button className="btn ghost" data-testid="reset-progress" onClick={() => setConfirmReset(true)}>
           Reset all progress
         </button>
+      </section>
+
+      <section className="panel" aria-labelledby="research-h" data-testid="research-panel">
+        <h2 id="research-h">Help test the game (optional)</h2>
+        <p className="note">
+          If you turn this on, the game keeps a record of how you play on <b>this device only</b>: the moves you make in Scout and Run, resets, hints, how each attempt ended, which version of each world you played, and roughly how long
+          things took. It does <b>not</b> record your name, location, device details or anything outside the game. Nothing is sent anywhere. You can download the file and send it to the people running the test if you choose, or delete it at any time.
+          The game plays the same either way.
+        </p>
+        <Switch
+          label="Keep a record of my gameplay on this device"
+          checked={t.enabled}
+          onChange={(v) => telemetry.setConsent(v)}
+          testId="research-toggle"
+        />
+        <p className="note" data-testid="research-count">
+          {t.enabled ? `${t.count} attempt${t.count === 1 ? '' : 's'} saved on this device.` : 'Off. Nothing is being recorded.'} <small>(Policy wording: {POLICY_VERSION}, draft)</small>
+        </p>
+        <div className="row">
+          <button className="btn ghost" data-testid="research-download" disabled={!t.enabled || t.count === 0} onClick={download}>
+            Download my gameplay file
+          </button>
+          <button className="btn ghost" data-testid="research-delete" disabled={t.count === 0} onClick={() => telemetry.clear()}>
+            Delete my saved gameplay
+          </button>
+        </div>
       </section>
 
       {confirmReset && (

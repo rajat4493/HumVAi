@@ -23,3 +23,23 @@ jobs:
         with:
           name: playwright-results
           path: test-results
+  # Real Firefox and WebKit (Safari's engine, including an iPhone profile). Not installable in the coding sandbox, so this is the
+  # only place those engines run. Reported separately so a browser-specific failure is visible without hiding the main result.
+  cross-browser:
+    runs-on: ubuntu-latest
+    needs: check
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps firefox webkit
+      - run: CROSS_BROWSER=1 npx playwright test --project=firefox --project=webkit --project=webkit-phone
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cross-browser-results
+          path: test-results

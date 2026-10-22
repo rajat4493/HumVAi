@@ -9,6 +9,7 @@ npm ci
 npm run check          # types, lint, unit tests, world solvability, recording verification, build, key scan
 npm run test:e2e       # Playwright (desktop + phone; needs Chromium): every world is won through the real controls
 npm run verify:subpath # the production build served under /HumVAi/, as GitHub Pages does
+npm run live-smoke -- <url>   # smoke test of a deployed copy (desktop + phone profiles)
 npm run dev --workspace @hva/web   # http://localhost:5173
 ```
 
@@ -22,4 +23,4 @@ npm run dev --workspace @hva/web   # http://localhost:5173
 Arrows or WASD to move, Space to interact (Shift + an arrow interacts with the switch or block on that side), R to reset, C to start the run. On a phone: the on-screen pad, swipe, or tap a nearby switch or block.
 
 ## Docs
-`docs/OWNER-SETUP.md` (GitHub Pages and API credentials) · `docs/DEPLOY.md` · `docs/RELEASE-QA.md` · `docs/design/campaign.md` (the twenty worlds) · `docs/design/level10-review.md` (quality reviews) · `docs/ai/runner.md` · `docs/product/dod-tracker.md` (definition of done).
+`docs/OWNER-SETUP.md` (GitHub Pages and API credentials) · `docs/DEPLOY.md` · `docs/RELEASE-QA.md` · `docs/design/campaign.md` (the twenty worlds) · `docs/design/level10-review.md` (quality reviews) · `docs/ai/runner.md` · `docs/product/dod-tracker.md` (definition of done) · `docs/VERIFICATION-LEDGER.md` (what is verified) · `docs/ai/PILOT.md` (first real AI attempt) · `docs/privacy/telemetry-policy-DRAFT.md` · `docs/qa/PLAYTEST-PROTOCOL.md`.

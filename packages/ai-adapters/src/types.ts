@@ -52,7 +52,7 @@ export interface DecisionResponse {
   retries: number;
 }
 
-export type AdapterErrorKind = 'transport' | 'rate_limit' | 'auth' | 'provider' | 'context_overflow' | 'timeout';
+export type AdapterErrorKind = 'transport' | 'rate_limit' | 'auth' | 'provider' | 'context_overflow' | 'timeout' | 'config';
 
 export class AdapterError extends Error {
   constructor(

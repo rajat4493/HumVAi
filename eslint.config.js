@@ -40,6 +40,6 @@ export default tseslint.config(
       'no-restricted-properties': ['error', { object: 'process', property: 'env', message: 'API keys and env belong to the server-side runner only.' }],
     },
   },
-  { files: ['apps/web/**/*.test.ts'], languageOptions: { globals: globals.node }, rules: { 'no-restricted-imports': 'off' } },
+  { files: ['apps/web/**/*.test.ts', 'apps/web/vite.config.ts'], languageOptions: { globals: globals.node }, rules: { 'no-restricted-imports': 'off' } }, // build-time and test-only Node code
   { files: ['**/*.{js,mjs}', 'tests/**/*.ts', 'playwright.config.ts', 'packages/game-core/scripts/**/*.ts', 'apps/runner/**/*.ts', 'packages/ai-adapters/test/**/*.ts', 'tools/**/*.mjs', 'tools/**/*.ts'], languageOptions: { globals: globals.node } },
 );

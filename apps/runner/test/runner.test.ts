@@ -187,3 +187,38 @@ describe('CLI (subprocess)', () => {
     expect(r.out).not.toContain(KEY);
   }, 90_000);
 });
+
+describe('cost estimate (no network)', () => {
+  it('grows with the square of the calls, scales with attempts, and the worst case bounds the likely case', async () => {
+    const { estimateAttempt, estimateUsd } = await import('../src/estimate');
+    const w1 = estimateAttempt(LEVELS[0]!, { outputPerCall: 600, maxOutputTokens: 16000 });
+    const w20 = estimateAttempt(LEVELS[19]!, { outputPerCall: 600, maxOutputTokens: 16000 });
+    expect(w1.likelyCalls).toBe(8); // World 1 has no scouting: the optimal run is 8 actions
+    expect(w1.maxCalls).toBe(12 + 20 + 10);
+    expect(w20.likelyCalls).toBe(16); // commit + 15
+    expect(w1.worstInputTokens).toBeGreaterThan(w1.likelyInputTokens);
+    expect(w1.worstOutputTokens).toBeGreaterThan(w1.likelyOutputTokens);
+    const price = { inputPerMTok: 2, outputPerMTok: 10 };
+    const one = estimateUsd(w1, price, 1);
+    const three = estimateUsd(w1, price, 3);
+    expect(three.likely).toBeCloseTo(one.likely * 3, 10);
+    expect(one.worst).toBeGreaterThan(one.likely);
+    expect(one.likely).toBeGreaterThan(0);
+  });
+
+  it('the estimate command needs prices (nothing is guessed), prints a cost with them, and never needs a key', async () => {
+    const root = join(__dirname, '../../..');
+    const go = (args: string[]) =>
+      run('npx', ['tsx', 'apps/runner/src/cli.ts', ...args], { cwd: root, env: { ...process.env, ANTHROPIC_API_KEY: '', OPENAI_API_KEY: '' } }).then(
+        (r) => ({ code: 0, out: r.stdout + r.stderr }),
+        (e: { code?: number; stdout?: string; stderr?: string }) => ({ code: e.code ?? 1, out: (e.stdout ?? '') + (e.stderr ?? '') }),
+      );
+    expect((await go(['estimate', '--model', 'anthropic:claude-sonnet-5-5'])).out).toContain('--prices is required');
+    const prices = join(tmp(), 'prices.json');
+    writeFileSync(prices, JSON.stringify({ 'anthropic:claude-sonnet-5-5': { inputPerMTok: 2, outputPerMTok: 10 } }));
+    const ok = await go(['estimate', '--model', 'anthropic:claude-sonnet-5-5', '--prices', prices, '--levels', 'w01-first-steps', '--max-output-tokens', '4000']);
+    expect(ok.code).toBe(0);
+    expect(ok.out).toMatch(/w01-first-steps: 8 calls/);
+    expect(ok.out).toMatch(/TOTAL: likely \$\d/);
+  }, 60_000);
+});

@@ -3,6 +3,7 @@ import { LEVELS } from '@hva/game-core';
 import type { RunRecord } from '@hva/ai-adapters';
 import { verifyRecord } from '@hva/ai-adapters';
 import { listAnthropicModels, listOpenAIModels } from '@hva/ai-adapters/providers';
+import { estimateAttempt, estimateUsd } from './estimate';
 import { baseUrlOverride, gitVersion, loadPrices, makeAdapter, parseSpec, promptHash } from './config';
 import { levelsById, runExperiment } from './exec';
 import { publishRecordings } from './publish';
@@ -14,8 +15,11 @@ const USAGE = `hva runner (server-side only; API keys come from the environment,
   preflight --model <provider:id> [--model ...]
       Check each key is set and the model id exists in the provider's own model list.
   run --live --model <provider:id> [--model ...] --out <dir> [--levels w01,w02] [--attempts N]
-      [--prices prices.json --spend-cap-usd N | --max-total-tokens N] [--openai-api chat|responses]
+      [--prices prices.json --spend-cap-usd N | --max-total-tokens N] [--max-output-tokens N] [--openai-api chat|responses]
       Live runs REQUIRE --live and a cap. They stop at 90% (no new attempts) and 100% (mid-attempt).
+  estimate --model <provider:id> --prices prices.json [--levels w01,w02] [--attempts N] [--max-output-tokens N] [--assume-output-tokens N]
+      Costs nothing and calls nothing. Prints the likely and the worst-case cost of a run from the real prompt and an optimal
+      playthrough (every call re-sends the whole history). Use it to pick --spend-cap-usd before any live run.
   verify --out <dir>          Re-verify every record against the engine; non-zero exit on any failure.
   report --out <dir> [--title T] [--write file.md]
   publish --out <dir> --model <provider:id> [--to apps/web/public/recordings]
@@ -65,6 +69,33 @@ async function main(): Promise<number> {
     return bad === 0 && (flags.get('model') ?? []).length > 0 ? 0 : 1;
   }
 
+  if (cmd === 'estimate') {
+    const prices = loadPrices(one('prices'));
+    if (!prices) throw new Error('--prices is required: no price is guessed');
+    const attempts = Number(one('attempts') ?? 1);
+    const maxOut = Number(one('max-output-tokens') ?? 16000);
+    const likelyOut = Number(one('assume-output-tokens') ?? 600);
+    let any = false;
+    for (const m of flags.get('model') ?? []) {
+      const spec = parseSpec(m);
+      const price = prices[`${spec.provider}:${spec.modelId}`];
+      if (!price) throw new Error(`no price for ${m} in the prices file`);
+      let likely = 0;
+      let worst = 0;
+      for (const level of levelsById(one('levels')?.split(','))) {
+        const e = estimateAttempt(level, { outputPerCall: likelyOut, maxOutputTokens: maxOut });
+        const usd = estimateUsd(e, price, attempts);
+        likely += usd.likely;
+        worst += usd.worst;
+        console.log(`${m} ${level.id}: ${e.likelyCalls} calls if played well (hard ceiling ${e.maxCalls}); input ~${e.likelyInputTokens} tokens likely, ~${e.worstInputTokens} worst; x${attempts} attempt(s): likely $${usd.likely.toFixed(4)}, worst $${usd.worst.toFixed(4)}`);
+        any = true;
+      }
+      console.log(`${m} TOTAL: likely $${likely.toFixed(4)}; worst case $${worst.toFixed(4)} (assumes ${likelyOut} output tokens per call normally and ${maxOut} per call in the worst case, ${3} characters per token)`);
+      console.log('The spend cap you pass to `run` is what actually limits spending; this is only to choose it sensibly.');
+    }
+    return any ? 0 : 1;
+  }
+
   if (cmd === 'run') {
     if (!bools.has('live')) throw new Error('refusing to call real models without --live');
     if (!out) throw new Error('--out <dir> is required');
@@ -74,7 +105,9 @@ async function main(): Promise<number> {
     if (cap === undefined && tokenCap === undefined) throw new Error('a spending limit is required: --spend-cap-usd (with --prices) or --max-total-tokens');
     if (cap !== undefined && !prices) throw new Error('--spend-cap-usd needs --prices (no price is guessed)');
     const openaiApi = one('openai-api') === 'responses' ? 'responses' : 'chat';
-    const adapters = (flags.get('model') ?? []).map((m) => makeAdapter(parseSpec(m), process.env, { openaiApi }));
+    const maxOut = one('max-output-tokens');
+    const sampling = maxOut === undefined ? undefined : { maxOutputTokens: Number(maxOut) };
+    const adapters = (flags.get('model') ?? []).map((m) => makeAdapter(parseSpec(m), process.env, { openaiApi, ...(sampling ? { sampling } : {}) }));
     if (adapters.length === 0) throw new Error('at least one --model is required');
     if (prices) for (const a of adapters) if (!prices[`${a.identity.provider}:${a.identity.modelId}`]) console.warn(`warning: no price for ${a.identity.provider}:${a.identity.modelId}; its cost is not counted toward the cap`);
     const res = await runExperiment({

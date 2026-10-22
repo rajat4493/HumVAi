@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChallengeDefinition } from '@hva/game-core';
-import { ALL_ACHIEVEMENTS, analyzeRun, campaignEntry, solve } from '@hva/game-core';
+import { ALL_ACHIEVEMENTS, analyzeRun, campaignEntry, hashString, solve } from '@hva/game-core';
 import type { GameAction } from '@hva/game-core';
 import { ActorCard } from '../components/ActorCard';
 import { BudgetPips } from '../components/BudgetPips';
@@ -17,6 +17,7 @@ import { stepsFromActions, stepsFromRecord } from '../game/replay';
 import { optimalLength } from '../lib/solve';
 import { useOpponent } from '../opponent/useOpponent';
 import { ReplayPanel } from '../replay/ReplayPanel';
+import { telemetry } from '../telemetry/instance';
 import { Reveal } from './Reveal';
 import { completedCount, progressOf, recordLoss, recordWin } from '../save/save';
 import type { SaveStore } from '../save/store';
@@ -49,6 +50,7 @@ export function Arena({ challenge, index, total, store, skipBriefing, onMap, onN
   const host = useRef<HTMLDivElement>(null);
   const ctl = useRef<GameController | null>(null);
   const recorded = useRef(false);
+  const beginAttempt = useRef<() => void>(() => undefined);
   const startedAt = useRef(new Date().toISOString());
   const entry = campaignEntry(challenge.id);
   const resumable = useRef(
@@ -80,7 +82,18 @@ export function Arena({ challenge, index, total, store, skipBriefing, onMap, onN
     if (!host.current) return;
     const c = new GameController(host.current, challenge, resumable.current?.actions ?? []);
     ctl.current = c;
+    const begin = () => {
+      const coarse = typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches;
+      telemetry.beginAttempt({ levelId: challenge.id, levelVersion: challenge.version, startHash: hashString(JSON.stringify(c.observe())), device: coarse ? 'touch' : 'pointer', prefix: resumable.current?.actions ?? [] });
+    };
+    begin();
+    beginAttempt.current = begin;
+    let phaseBefore: 'explore' | 'execute' = c.observe().phase;
     const off = c.subscribe((s) => {
+      if (s.action && !s.events.some((e) => e.type === 'REJECTED')) {
+        telemetry.recordAction({ action: s.action, phase: phaseBefore, events: s.events.map((e) => e.type), hash: hashString(JSON.stringify(s.obs)) });
+      }
+      phaseBefore = s.obs.phase;
       setSnap(s);
       audio.setIntensity(s.obs.phase === 'explore' ? 'scout' : 'run');
       if (s.action) setAnnounce(`${captionFor({ action: s.action, valid: true, events: s.events })} ${s.obs.actionsRemaining} actions left in the ${s.obs.phase === 'explore' ? 'scout' : 'run'}.`);
@@ -103,6 +116,7 @@ export function Arena({ challenge, index, total, store, skipBriefing, onMap, onN
     });
     return () => {
       off();
+      telemetry.abandon();
       c.destroy();
       ctl.current = null;
     };
@@ -126,6 +140,7 @@ export function Arena({ challenge, index, total, store, skipBriefing, onMap, onN
     const analysis = analyzeRun(challenge, actions);
     const optimal = optimalLength(challenge);
     store.clearSession();
+    telemetry.endAttempt({ status: status === 'won' && analysis.outcome.won ? 'won' : 'lost', runActions: analysis.outcome.runActions, scoutActions: analysis.outcome.scoutActions, scoutResets: analysis.scoutResets, runResets: analysis.runResets });
     if (status === 'won' && analysis.outcome.won) {
       const r = recordWin(store.get(), { level: challenge, actions, analysis, hintsUsed, optimalLength: optimal, now: new Date() });
       store.set(r.save);
@@ -154,6 +169,8 @@ export function Arena({ challenge, index, total, store, skipBriefing, onMap, onN
     startedAt.current = new Date().toISOString();
     store.clearSession();
     ctl.current?.restart();
+    resumable.current = null;
+    beginAttempt.current();
   };
 
   const allDone = !onNext && !!result?.won && completedCount(store.get()) >= total;
@@ -297,7 +314,10 @@ export function Arena({ challenge, index, total, store, skipBriefing, onMap, onN
               Close
             </button>
             {hintsUsed < hints.length && (
-              <button className="btn" data-testid="reveal-hint" onClick={() => setHintsUsed(hintsUsed + 1)}>
+              <button className="btn" data-testid="reveal-hint" onClick={() => {
+                  telemetry.recordHint(hintsUsed + 1);
+                  setHintsUsed(hintsUsed + 1);
+                }}>
                 {hintsUsed === 0 ? 'Show a hint' : 'Show another hint'} ({hintsUsed}/{hints.length})
               </button>
             )}
