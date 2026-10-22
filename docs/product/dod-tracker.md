@@ -17,7 +17,7 @@ Status vocabulary: **Met** (evidence exists and was checked), **Partly** (some o
 | 11 | Progress saves correctly | **Met (Chromium)** | unit + e2e |
 | 12 | Hints and recovery | **Met** | Three tiers, assisted marking, free Scout reset; Space/Hints bug fixed |
 | 13 | Daily challenges and basic achievements | **Partly, by decision** | Achievements and local Hall done; daily challenge frozen by the owner |
-| 14 | Tested across major browsers | **Pending** | CI `cross-browser` job (Firefox, WebKit, iPhone profile) added; first result not yet read |
+| 14 | Tested across major browsers | **Met on CI engines** | Firefox, WebKit and an iPhone 13 profile pass the gameplay test subset on GitHub (run 39866878465); real devices not tested |
 | 15 | Security and privacy requirements | **Partly** | No secrets in the bundle, no provider traffic, local-only data; opt-in local telemetry built; data policy draft awaiting approval |
 | 16 | Real users have tested the game | **Blocked** | Protocol and analyser ready; needs people |
 | 17 | Critical defects resolved | **Partly** | One owner-reported bug fixed; no systematic external testing yet |
