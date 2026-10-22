@@ -24,7 +24,8 @@
     "scan:bundle": "node tools/scan-bundle.mjs",
     "fixtures": "tsx tools/make-fixtures.ts",
     "verify:recordings": "tsx tools/verify-recordings.ts",
-    "verify:subpath": "node tools/check-subpath.mjs"
+    "verify:subpath": "node tools/check-subpath.mjs",
+    "live-smoke": "node tools/live-smoke.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.10.2",
