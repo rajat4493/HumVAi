@@ -6,8 +6,8 @@ Status vocabulary: **Met** (evidence exists and was checked), **Partly** (some o
 |---|---|---|---|
 | 1 | Working browser URL | **Blocked** | Pages workflows and `docs/DEPLOY.md` exist; nothing has been deployed or loaded on GitHub. Needs the owner to enable Pages and merge/run the workflow |
 | 2 | Start without registering | **Met** | No accounts anywhere; progress is local; e2e covers a fresh start |
-| 3 | Twenty quality-controlled levels playable | **Unmet** | 5 of 20 exist (Stage 3 in progress) |
-| 4 | All levels have verified solutions | **Met for the 5 that exist** | `npm run verify:levels` (solvable, replay-verified, 0 dead states); applies to every new level before it ships |
+| 3 | Twenty quality-controlled levels playable | **Built, not yet quality-controlled by people** | 20 of 20 exist and pass the solver gates and a browser win-through on keyboard and touch. Levels 1-10 had the structured review in `docs/design/level10-review.md`. Levels 11-20 have had no review and no human has played any of the 20, so "quality-controlled" is not yet earned. |
+| 4 | All levels have verified solutions | **Met** | `npm run verify:levels` (solvable, replay-verified, 0 dead states) for all 20; `tests/e2e/campaign.spec.ts` wins each one through the real controls |
 | 5 | Five chapters with meaningful progression | **Partly** | Three chapters populated (Awakening, The Unknown, Adaptation) with 5 worlds; The Strategist and The Frontier do not exist yet |
 | 6 | A genuine AI opponent has produced verified results | **Blocked** | Runner built and verified against mock providers only. No API keys in the environment, `api.openai.com` blocked, no approved spend cap, no OpenAI model id. No real model has been run |
 | 7 | AI comparisons and replays are accurate | **Partly** | Comparison rule, selection rule, in-browser replay verification, tamper rejection and replay cadence are tested with labelled reference-player fixtures. Not demonstrated with a real model (none exists) |

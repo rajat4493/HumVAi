@@ -41,6 +41,12 @@ export interface HiddenRules {
   /** Switches that begin ON (default OFF). */
   switchInitiallyOn?: string[];
   /**
+   * Spring switches: a listed switch turns itself back OFF this many actions after it was switched ON
+   * (the toggling action is not counted; the next `n` actions are). Switching it off by hand cancels the timer.
+   * Nothing tells the player; they see the switch pop back (a SWITCH_TOGGLED event with on:false).
+   */
+  switchTimers?: Record<string, number>;
+  /**
    * Rule change. The first time `tripwire` is triggered the world enters
    * epoch 1 and the listed doors switch to the given conditions
    * (doors not listed keep their epoch-0 condition).
@@ -162,6 +168,8 @@ export interface GameState {
   doorsOpen: Record<string, boolean>;
   platesPressed: Record<string, boolean>;
   tripwiresSpent: string[];
+  /** Actions left before each running spring switch pops back off (only for switches with a timer). */
+  springs: Record<string, number>;
   epoch: number;
   phase: Phase;
   scoutUsed: number;

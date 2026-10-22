@@ -42,9 +42,9 @@ export class GameScene extends Phaser.Scene {
       const dy = p.y - down.y;
       down = null;
       if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) {
-        // a tap: interact with the adjacent switch or block on that tile
+        // a tap: interact with the adjacent switch or block nearest the tap
         const size = TILE * this.board.scaleX;
-        this.ctl.interactAt?.(Math.floor((p.x - this.board.x) / size), Math.floor((p.y - this.board.y) / size));
+        this.ctl.interactNear?.((p.x - this.board.x) / size, (p.y - this.board.y) / size);
         return;
       }
       const dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'RIGHT' : 'LEFT') : dy > 0 ? 'DOWN' : 'UP';

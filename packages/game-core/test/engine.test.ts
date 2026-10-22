@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ChallengeDefinition, GameAction, GameEvent } from '../src';
-import { LEVELS, create, evaluate, legalActions, observe, parseWorld, renderAscii, replay, solve, step } from '../src';
+import { LEVELS, create, evaluate, legalActions, observe, parseWorld, renderAscii, replay, solve, step, worldKey } from '../src';
 
 const [l1, l2, l3, l4, l5] = LEVELS as [
   ChallengeDefinition,
@@ -442,5 +442,61 @@ describe('rule change can also (un)jam switches', () => {
 
   it('validates references', () => {
     expect(() => create({ ...jammed, rules: { ...jammed.rules, shift: { tripwire: 'rune', doors: {}, switchEnabled: { rune: { op: 'const', value: true } } } } }, 'x')).toThrow(/non-switch/);
+  });
+});
+
+describe('spring switches (switchTimers)', () => {
+  const spring = (n: number): ChallengeDefinition => ({
+    id: 'spring-test',
+    version: 1,
+    name: 'Spring',
+    briefing: 'x',
+    learning: 'x',
+    difficulty: 1,
+    budget: { explore: 0, execute: 30 },
+    map: ['###########', '#@......DE#', '###a#######'],
+    legend: { a: { kind: 'switch', id: 'switch-a' }, D: { kind: 'door', id: 'door-d' } },
+    rules: { doors: { 'door-d': { op: 'on', id: 'switch-a' } }, switchTimers: { 'switch-a': n } },
+  });
+  const R: GameAction = { type: 'MOVE', direction: 'RIGHT' };
+  const use: GameAction = { type: 'INTERACT', targetId: 'switch-a' };
+
+  it('pops back off exactly n actions after the toggling action, closing the door', () => {
+    const s = create(spring(3), 't');
+    step(s, R);
+    step(s, R);
+    const toggled = step(s, use);
+    expect(toggled.events).toContainEqual({ type: 'SWITCH_TOGGLED', id: 'switch-a', on: true });
+    const e1 = step(s, { type: 'MOVE', direction: 'LEFT' });
+    const e2 = step(s, R);
+    expect(e1.events.some((e) => e.type === 'SWITCH_TOGGLED')).toBe(false);
+    expect(e2.events.some((e) => e.type === 'SWITCH_TOGGLED')).toBe(false);
+    const e3 = step(s, R);
+    expect(e3.events).toContainEqual({ type: 'SWITCH_TOGGLED', id: 'switch-a', on: false });
+    expect(e3.events).toContainEqual({ type: 'DOOR_CLOSED', id: 'door-d' });
+  });
+
+  it('switching it off by hand cancels the timer; switching on again restarts it', () => {
+    const s = create(spring(2), 't');
+    step(s, R);
+    step(s, R);
+    step(s, use);
+    step(s, use); // off by hand
+    const again = step(s, use);
+    expect(again.events).toContainEqual({ type: 'SWITCH_TOGGLED', id: 'switch-a', on: true });
+    step(s, { type: 'MOVE', direction: 'LEFT' });
+    expect(step(s, R).events).toContainEqual({ type: 'SWITCH_TOGGLED', id: 'switch-a', on: false });
+  });
+
+  it('the solver and replay agree with the timer (a dash that is too long fails, a short one wins)', () => {
+    const tight = spring(5);
+    const ok = solve(tight);
+    expect(ok.solvable).toBe(true);
+    const tooShort = solve(spring(3));
+    expect(tooShort.solvable).toBe(false);
+  });
+
+  it('worlds without springs keep their original state keys', () => {
+    expect(worldKey(create(l1, 'k'))).not.toContain('|sp');
   });
 });

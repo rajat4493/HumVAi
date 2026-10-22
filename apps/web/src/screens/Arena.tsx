@@ -96,6 +96,8 @@ export function Arena({ challenge, index, total, store, skipBriefing, onMap, onN
         setToast('Nothing happened.');
       } else if (s.events.some((e) => e.type === 'EPOCH_CHANGED')) {
         setToast('The world just changed.');
+      } else if (s.events.some((e) => e.type === 'SWITCH_TOGGLED' && !e.on && !(s.action?.type === 'INTERACT' && s.action.targetId === e.id))) {
+        setToast('A switch sprang back off by itself.');
       }
     });
     return () => {

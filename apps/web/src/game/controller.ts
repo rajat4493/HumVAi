@@ -28,8 +28,8 @@ export interface BoardController {
   attach(scene: GameScene): void;
   dispatch(action: GameAction): StepResult | null;
   interact(): void;
-  /** Optional: a tap on a board tile. Interacts with whatever stands there when it is adjacent. */
-  interactAt?(x: number, y: number): void;
+  /** Optional: a tap at board coordinates (in tiles, fractional). Interacts with the nearest adjacent switch or block. */
+  interactNear?(x: number, y: number): void;
 }
 
 export interface Snapshot {
@@ -135,15 +135,23 @@ export class GameController implements BoardController {
 
   interactToward(dir: Direction): void {
     const obs = observe(this.state);
-    this.interactAt(obs.player.x + DELTA[dir].x, obs.player.y + DELTA[dir].y);
+    this.interactNear(obs.player.x + DELTA[dir].x + 0.5, obs.player.y + DELTA[dir].y + 0.5, 0.5);
   }
 
-  interactAt(x: number, y: number): void {
+  /**
+   * Interacts with the adjacent switch or block closest to a point on the board (tile units). Boards can be small on a
+   * phone, so a tap within `reach` tiles of an adjacent target's centre counts; with two close targets the nearer wins.
+   */
+  interactNear(x: number, y: number, reach = 1.1): void {
     const obs = observe(this.state);
-    const e = obs.entities.find((n) => n.pos.x === x && n.pos.y === y && (n.kind === 'switch' || n.kind === 'block'));
-    if (!e) return;
-    if (Math.abs(obs.player.x - x) + Math.abs(obs.player.y - y) !== 1) return;
-    this.dispatch({ type: 'INTERACT', targetId: e.id });
+    let best: { id: string; d: number } | null = null;
+    for (const e of obs.entities) {
+      if (e.kind !== 'switch' && e.kind !== 'block') continue;
+      if (Math.abs(obs.player.x - e.pos.x) + Math.abs(obs.player.y - e.pos.y) !== 1) continue;
+      const d = Math.hypot(x - (e.pos.x + 0.5), y - (e.pos.y + 0.5));
+      if (d <= reach && (!best || d < best.d)) best = { id: e.id, d };
+    }
+    if (best) this.dispatch({ type: 'INTERACT', targetId: best.id });
   }
 
   commit(): void {

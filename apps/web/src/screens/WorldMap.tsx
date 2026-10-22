@@ -88,7 +88,7 @@ export function WorldMap({ save, unlockAll, hasSession, onPlay, onBack, onSettin
           </section>
         ))}
       </div>
-      <p className="map-foot">More worlds are in development.</p>
+      <p className="map-foot">More worlds are on the way.</p>
     </main>
   );
 }

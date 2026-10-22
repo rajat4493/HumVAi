@@ -33,6 +33,8 @@ export function captionFor(step: Pick<ReplayStep, 'action' | 'valid' | 'events'>
       parts.push('Ended scouting: the run begins on a fresh world');
       break;
   }
+  const sprang = events.filter((e) => e.type === 'SWITCH_TOGGLED' && !e.on && !(act.type === 'INTERACT' && e.id === act.targetId));
+  if (sprang.length) parts.push(sprang.length > 1 ? 'switches sprang back off by themselves' : 'a switch sprang back off by itself');
   if (has('DOOR_OPENED')) parts.push('a door opened');
   if (has('DOOR_CLOSED')) parts.push('a door closed');
   if (has('PLATE_PRESSED')) parts.push('a plate was pressed');

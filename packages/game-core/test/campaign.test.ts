@@ -26,11 +26,25 @@ describe('campaign table', () => {
   });
 
   it('keeps the planned chapter identities and navigation helpers', () => {
-    expect(CAMPAIGN.map((c) => c.name)).toEqual(['Awakening', 'The Unknown', 'The Strategist', 'Adaptation']);
+    expect(CAMPAIGN.map((c) => c.name)).toEqual(['Awakening', 'The Unknown', 'The Strategist', 'Adaptation', 'The Frontier']);
     expect(campaignEntry('w05-garden-shifts')?.chapter.id).toBe('ch4');
     expect(nextLevelId('w01-first-steps')).toBe('w02-orange-switch');
     expect(nextLevelId('w02-orange-switch')).toBe('w06-both-needed');
     expect(nextLevelId(CAMPAIGN_ORDER[CAMPAIGN_ORDER.length - 1] as string)).toBeNull();
+  });
+
+  it('is the planned 5 x 4 campaign, and the Level 10 review set keeps its order', () => {
+    expect(CAMPAIGN.map((c) => c.levels.length)).toEqual([4, 4, 4, 4, 4]);
+    expect(CAMPAIGN_ORDER).toHaveLength(20);
+    expect(CAMPAIGN_ORDER.slice(0, 10)).toEqual([
+      'w01-first-steps', 'w02-orange-switch', 'w06-both-needed', 'w07-off-is-on', 'w03-locked-garden',
+      'w04-only-when', 'w11-corner-piece', 'w09-hold-the-line', 'w10-in-order', 'w08-heavy-load',
+    ]);
+  });
+
+  it('timing worlds: Two Springs must start with the slower-fading left switch', () => {
+    const first = (solve(levelById('w18-two-springs')!).optimalSolution as GameAction[]).find((a) => a.type === 'INTERACT');
+    expect(first).toEqual({ type: 'INTERACT', targetId: 'switch-left' });
   });
 
   it('the route hint for World 1 really is a winning route', () => {

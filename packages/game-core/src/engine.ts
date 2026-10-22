@@ -46,7 +46,12 @@ export function worldKey(s: GameState): string {
     .sort()
     .map((id) => `${id}=${s.switches[id] ? 1 : 0}`)
     .join(';');
-  return `p${s.player.x},${s.player.y}|${blocks}|${sw}|e${s.epoch}|t${[...s.tripwiresSpent].sort().join(',')}|${s.phase}|${s.status}`;
+  const springs = Object.keys(s.springs)
+    .sort()
+    .map((id) => `${id}:${s.springs[id]}`)
+    .join(';');
+  // appended only when a spring is running, so keys (and hashes) of every other world are unchanged
+  return `p${s.player.x},${s.player.y}|${blocks}|${sw}|e${s.epoch}|t${[...s.tripwiresSpent].sort().join(',')}|${s.phase}|${s.status}${springs ? `|sp${springs}` : ''}`;
 }
 
 export function stateHash(s: GameState): string {
@@ -62,6 +67,7 @@ function clone(s: GameState): GameState {
     doorsOpen: { ...s.doorsOpen },
     platesPressed: { ...s.platesPressed },
     tripwiresSpent: [...s.tripwiresSpent],
+    springs: { ...s.springs },
   };
 }
 
@@ -110,6 +116,27 @@ function settle(s: GameState): GameEvent[] {
   return events;
 }
 
+/**
+ * Counts down running spring switches by one action and pops the ones that reach zero. A switch that was
+ * switched on by this very action starts counting from the next one.
+ */
+function tickSprings(s: GameState, events: GameEvent[]): GameEvent[] {
+  const fresh = new Set(events.filter((e): e is Extract<GameEvent, { type: 'SWITCH_TOGGLED' }> => e.type === 'SWITCH_TOGGLED' && e.on).map((e) => e.id));
+  const out: GameEvent[] = [];
+  for (const id of Object.keys(s.springs).sort()) {
+    if (fresh.has(id)) continue;
+    const left = (s.springs[id] as number) - 1;
+    if (left > 0) {
+      s.springs[id] = left;
+    } else {
+      delete s.springs[id];
+      s.switches[id] = false;
+      out.push({ type: 'SWITCH_TOGGLED', id, on: false });
+    }
+  }
+  return out;
+}
+
 /** Fires tripwires under the player or a block (once each). */
 function checkTripwires(s: GameState): GameEvent[] {
   const shift = s.challenge.rules.shift;
@@ -134,6 +161,7 @@ function initialState(challenge: ChallengeDefinition, seed: string): GameState {
     doorsOpen: {},
     platesPressed: {},
     tripwiresSpent: [],
+    springs: {},
     epoch: 0,
     phase: challenge.budget.explore > 0 ? 'explore' : 'execute',
     scoutUsed: 0,
@@ -284,6 +312,11 @@ export function stepInternal(s: GameState, action: GameAction): { next: GameStat
       } else {
         const on = !next.switches[sw.id];
         next.switches[sw.id] = on;
+        const timer = next.challenge.rules.switchTimers?.[sw.id];
+        if (timer !== undefined) {
+          if (on) next.springs[sw.id] = timer;
+          else delete next.springs[sw.id];
+        }
         events.push({ type: 'SWITCH_TOGGLED', id: sw.id, on });
       }
       break;
@@ -316,7 +349,7 @@ export function stepInternal(s: GameState, action: GameAction): { next: GameStat
     }
   }
 
-  events.push(...checkTripwires(next), ...settle(next));
+  events.push(...tickSprings(next, events), ...checkTripwires(next), ...settle(next));
   return finish(next, events, wrap);
 }
 

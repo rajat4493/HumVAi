@@ -30,6 +30,8 @@ export const SWITCH_LOOK: Record<string, { shape: Shape; color: number }> = {
   'switch-one': { shape: 'circle', color: 0xff7a45 },
   'switch-two': { shape: 'diamond', color: 0x5fd0ff },
   'switch-three': { shape: 'triangle', color: 0x2dd4bf },
+  'switch-four': { shape: 'square', color: 0xf5d547 },
+  'switch-spring': { shape: 'diamond', color: 0xb78cff },
   'switch-left': { shape: 'circle', color: 0xff7a45 },
   'switch-right': { shape: 'square', color: 0xf5d547 },
   'switch-middle': { shape: 'triangle', color: 0x2dd4bf },

@@ -15,8 +15,8 @@ export interface Chapter {
 }
 
 /**
- * Chapter placement is metadata: level ids stay stable. Only built levels are listed; the table grows
- * toward the 20-level plan (5 chapters x 4) as levels pass the solver gates.
+ * Chapter placement is metadata: level ids stay stable. Five chapters of four worlds each; every world passes
+ * the solver gates (solvable, within budget, no dead states, replay-verified) before it is listed.
  */
 export const CAMPAIGN: readonly Chapter[] = [
   {
@@ -52,7 +52,7 @@ export const CAMPAIGN: readonly Chapter[] = [
         levelId: 'w07-off-is-on',
         hints: [
           'Both switches already glow, yet the door is shut. Maybe lit is not what it wants.',
-          'The door opens when exactly one of the two switches is on.',
+          'The door cares how many switches are lit, not which ones. Try the combinations.',
           'Walk right and switch one of them off (the yellow square works), then take the door.',
         ],
       },
@@ -88,11 +88,11 @@ export const CAMPAIGN: readonly Chapter[] = [
         ],
       },
       {
-        levelId: 'w08-heavy-load',
+        levelId: 'w09-hold-the-line',
         hints: [
-          'Two plates, two blocks. The door may want more than one thing at once.',
-          'Both plates must be held down at the same time. Each block belongs on its own plate.',
-          'Push the upper block onto its plate, return, push the lower block onto its plate, then take the door.',
+          'The switch does nothing when you try it. Something has to be true first.',
+          'The switch only responds while the pressure plate is held down. Use the block.',
+          'Push the block right onto the plate, go around to the switch and flip it, then take the door.',
         ],
       },
     ],
@@ -103,19 +103,35 @@ export const CAMPAIGN: readonly Chapter[] = [
     blurb: 'Plan before you move. Budgets tighten and order matters.',
     levels: [
       {
-        levelId: 'w09-hold-the-line',
-        hints: [
-          'The switch does nothing when you try it. Something has to be true first.',
-          'The switch only responds while the pressure plate is held down. Use the block.',
-          'Push the block right onto the plate, go around to the switch and flip it, then take the door.',
-        ],
-      },
-      {
         levelId: 'w10-in-order',
         hints: [
           'Two of these switches refuse to move at first. Notice which, and what changes once you succeed.',
           'Each stubborn switch wakes up when the one before it is on. The door dislikes the first switch being left on.',
           'Switch on the first, then the second, then turn the first off again. Walk right, switch on the third, and take the door.',
+        ],
+      },
+      {
+        levelId: 'w08-heavy-load',
+        hints: [
+          'Two plates, two blocks, and a door that will not open for you yet. Start with what you can reach.',
+          'The first plate opens the gate to the lower room, and both plates must be held at the end. Leave the first block where it is.',
+          'Push the upper block onto its plate, go through the gate, push the lower block left onto its plate, then take the exit door.',
+        ],
+      },
+      {
+        levelId: 'w12-against-the-wall',
+        hints: [
+          'The block is stuck in the corner. Pushing it from this side will not help.',
+          'Interact pulls a block toward you as you step back. Pull it onto the plate.',
+          'Go around to the left of the block, pull it three times so it lands on the plate, then walk back and take the door.',
+        ],
+      },
+      {
+        levelId: 'w13-combination',
+        hints: [
+          'Try the switches one at a time and watch the door. Not all four matter.',
+          'The door wants the first switch on, the fourth off, and at least one of the middle two on.',
+          'Switch the first on, one of the middle two on and the fourth off, then take the door.',
         ],
       },
     ],
@@ -131,6 +147,69 @@ export const CAMPAIGN: readonly Chapter[] = [
           'Two doors, but one is sealed. What does the glowing rune do?',
           'Stepping on the rune changes the rules. Then try the other switch.',
           'Open the gate, step on the rune, switch on the blue diamond, then take the far door.',
+        ],
+      },
+      {
+        levelId: 'w14-reversal',
+        hints: [
+          'The door is open. Walking toward it is not as safe as it looks.',
+          'The rune reverses the door\'s rule: afterwards it opens when the switch is off.',
+          'Switch the first switch off, cross the rune, and walk to the exit.',
+        ],
+      },
+      {
+        levelId: 'w15-swapped-wires',
+        hints: [
+          'After the rune, check what each switch does again.',
+          'The rune swaps which switch opens which door.',
+          'Switch on the second switch, cross the rune, and walk through both doors. The first switch is already on.',
+        ],
+      },
+      {
+        levelId: 'w16-the-simple-way',
+        hints: [
+          'Before you solve the puzzle, find out whether the world stays the same.',
+          'The rune flips the door: afterwards it opens when the plate is not pressed.',
+          'Skip the block. Walk down to the rune and through the door.',
+        ],
+      },
+    ],
+  },
+  {
+    id: 'ch5',
+    name: 'The Frontier',
+    blurb: 'Everything at once, and some things do not wait for you.',
+    levels: [
+      {
+        levelId: 'w17-spring-loaded',
+        hints: [
+          'Watch the switch after you use it.',
+          'The switch turns itself back off after a few moves, and the door closes with it. Be quick.',
+          'Step right once, flip the switch below you, then run right and down to the door without stopping.',
+        ],
+      },
+      {
+        levelId: 'w18-two-springs',
+        hints: [
+          'Both switches fade. Find out which one fades faster.',
+          'The right switch fades faster than the left, so do the longer-lasting one first.',
+          'Flip the left switch, run to the right switch and flip it, then go straight back to the door.',
+        ],
+      },
+      {
+        levelId: 'w19-chain-reaction',
+        hints: [
+          'Some switches refuse to move until another is lit. Notice the order, and that nothing stays lit.',
+          'Each switch needs the one before it, each fades, and the door needs the last one.',
+          'Flip the top switch, then the middle one, then the bottom-left one, without stopping, and take the door.',
+        ],
+      },
+      {
+        levelId: 'w20-the-last-experiment',
+        hints: [
+          'The exit is sealed and nothing in the upper room opens it. Look for what changes the world.',
+          'Three things are needed at once: the plate held down, the rune stepped on, and the fading switch flipped last.',
+          'Block onto the plate, through the gate, west to the rune, then flip the switch and run to the exit door.',
         ],
       },
     ],
