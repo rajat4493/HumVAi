@@ -71,7 +71,11 @@ export class GameController implements BoardController {
     if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return; // holding a key must not burn budget
     if (document.querySelector('[aria-modal="true"]')) return; // dialogs own the keyboard
     const t = e.target;
-    if (t instanceof HTMLElement && (t.closest('button, input, select, textarea, [role="switch"], [role="radio"]') !== null) && (e.key === ' ' || e.key === 'Enter')) return; // let focused controls activate natively
+    // Let focused controls activate natively, except that Space on a header button (hints, menu, start run) means "interact":
+    // closing a dialog hands focus back to its button, and Space must keep playing the game. Enter still activates them.
+    if (t instanceof HTMLElement && t.closest('button, input, select, textarea, [role="switch"], [role="radio"]') !== null && (e.key === ' ' || e.key === 'Enter')) {
+      if (!(e.key === ' ' && t.closest('.hud'))) return;
+    }
     const dir = KEYS[e.key];
     if (dir && e.shiftKey) {
       // Shift + direction: interact with the switch or block on that side, at no extra cost

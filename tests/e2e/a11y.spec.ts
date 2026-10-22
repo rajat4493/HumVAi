@@ -103,3 +103,21 @@ test('the ending, the completed map and a late world have no serious or critical
   await ready(page);
   await scan(page, 'world 20');
 });
+
+test('Space still plays after a dialog closes and focus returns to its header button', async ({ page, isMobile }) => {
+  test.skip(!!isMobile, 'keyboard only');
+  await page.goto('/?screen=arena&level=w02-orange-switch&briefing=0&unlock=all');
+  await ready(page);
+  await page.getByTestId('hint-button').click();
+  await page.getByRole('dialog', { name: 'Hints' }).getByRole('button', { name: 'Close' }).click();
+  await expect(page.getByTestId('hint-button')).toBeFocused();
+  for (const k of ['ArrowRight', 'ArrowRight', 'ArrowDown']) await page.keyboard.press(k);
+  await page.keyboard.press('Space'); // interact with the switch below, not re-open the hints
+  await expect(page.getByRole('dialog', { name: 'Hints' })).toHaveCount(0);
+  const toggled = await page.evaluate(() => (window as unknown as { __HVA__: { getState(): { entities: { kind: string; state: string }[] } } }).__HVA__.getState().entities.some((e) => e.kind === 'switch' && e.state === 'on'));
+  expect(toggled).toBe(true);
+  // Enter on the focused header button still opens its dialog
+  await page.getByTestId('hint-button').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog', { name: 'Hints' })).toBeVisible();
+});
