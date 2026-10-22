@@ -34,3 +34,10 @@ Method: solver metrics (`tools` lab), reading every briefing and hint, screensho
 
 ## Decision
 No serious design issue requiring approval. Proceeding with chapters 3-5 under three rules learned here: depth over length, 2-D rooms instead of corridors, boards at most 10 tiles wide.
+
+## After the review: worlds 11-20 (built under those rules, not yet reviewed with the same rigour)
+- **One new mechanic, added only where nothing else gave variety: spring switches.** A switch turns itself off a fixed number of *actions* later (not seconds, so it is fair to a person on a phone and to a model). It adds the one thing the other mechanics could not: time as a resource ("prepare, then dash", "two timers that must overlap"). Used in worlds 17-20. Nothing tells the player the timer; they see the switch pop back (toast, sound, screen-reader text). Verified: engine unit tests, solver, replay, and each world won in a browser.
+- **Chapter 3 (11-12):** pulling a block (11) and logical deduction with four switches (12).
+- **Chapter 4 (13-16):** a rule reverses (13), links swap (14), and the puzzle you solved first is not needed (15). Known weakness: World 15 is won in six actions by anyone who walks straight to the exit, so its lesson lands only for players who tried the block first. Worth watching in playtests; it may be better as a hint-free "breather" than a chapter piece.
+- **Chapter 5 (17-20):** spring switches, two timers, a timed chain, and a finale that needs a held plate, a hidden rune and a timed switch in the right order. Known risks: World 19 is a 21-step walk across an open room (tedium risk, many equivalent routes); World 20 is 25 actions with about seven decisions and several irreversible states (recoverable in Scout, costly in the Run); World 18 is 11 tiles wide, one over the 10-tile guideline.
+- **Still true of all 20:** no person has played any of them. Difficulty is likely too low for chapters 1-3 and unknown for 4-5 until real play and real AI attempts exist; budgets are the lever and are cheap to change (version bump).
