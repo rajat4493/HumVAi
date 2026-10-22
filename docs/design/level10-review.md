@@ -1,6 +1,6 @@
 # Level 10 gameplay-quality review
 
-Scope: the first ten worlds in campaign order (World 11, *The Garden Shifts*, is the existing shift level and sits in chapter 4).
+Scope: the first ten worlds in campaign order (at the time of the review *The Garden Shifts* was World 11; it is now World 13, the first of chapter 4).
 Method: solver metrics (`tools` lab), reading every briefing and hint, screenshots on desktop (1280x760) and phone (390x780), and playing every world through the real controls in a browser (`tests/e2e/campaign.spec.ts`).
 **Not done: no person has played these worlds.** Everything below about enjoyment is a structured judgement, not evidence. Human playtests remain the gate that matters most.
 
@@ -37,7 +37,7 @@ No serious design issue requiring approval. Proceeding with chapters 3-5 under t
 
 ## After the review: worlds 11-20 (built under those rules, not yet reviewed with the same rigour)
 - **One new mechanic, added only where nothing else gave variety: spring switches.** A switch turns itself off a fixed number of *actions* later (not seconds, so it is fair to a person on a phone and to a model). It adds the one thing the other mechanics could not: time as a resource ("prepare, then dash", "two timers that must overlap"). Used in worlds 17-20. Nothing tells the player the timer; they see the switch pop back (toast, sound, screen-reader text). Verified: engine unit tests, solver, replay, and each world won in a browser.
-- **Chapter 3 (11-12):** pulling a block (11) and logical deduction with four switches (12).
-- **Chapter 4 (13-16):** a rule reverses (13), links swap (14), and the puzzle you solved first is not needed (15). Known weakness: World 15 is won in six actions by anyone who walks straight to the exit, so its lesson lands only for players who tried the block first. Worth watching in playtests; it may be better as a hint-free "breather" than a chapter piece.
+- **Chapter 3 (11-12; 9-10 were reviewed above):** pulling a block (11) and logical deduction with four switches (12).
+- **Chapter 4 (13-16):** the world shifts (13, existing), a rule reverses (14), links swap (15), and the puzzle you solved first is not needed (16). Known weakness: World 16 is won in six actions by anyone who walks straight to the exit, so its lesson lands only for players who tried the block first. Worth watching in playtests; it may be better as a hint-free "breather" than a chapter piece.
 - **Chapter 5 (17-20):** spring switches, two timers, a timed chain, and a finale that needs a held plate, a hidden rune and a timed switch in the right order. Known risks: World 19 is a 21-step walk across an open room (tedium risk, many equivalent routes); World 20 is 25 actions with about seven decisions and several irreversible states (recoverable in Scout, costly in the Run); World 18 is 11 tiles wide, one over the 10-tile guideline.
 - **Still true of all 20:** no person has played any of them. Difficulty is likely too low for chapters 1-3 and unknown for 4-5 until real play and real AI attempts exist; budgets are the lever and are cheap to change (version bump).
