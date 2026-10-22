@@ -2,11 +2,14 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './audio/instance';
 import { App } from './App';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import './styles/tokens.css';
 import './styles/app.css';
 
 createRoot(document.getElementById('root') as HTMLElement).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </StrictMode>,
 );

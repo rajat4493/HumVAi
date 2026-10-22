@@ -12,6 +12,9 @@ The game is a static site (`apps/web/dist`): no server, no API keys, no database
 2. Merge `claude/humans-vs-ai-plan-fz5yq0` into `main` (or run the "Deploy to GitHub Pages" workflow manually; GitHub's `github-pages` environment only allows the default branch unless you add this branch under **Settings → Environments → github-pages → Deployment branches**).
 3. The expected address is `https://rajat4493.github.io/HumVAi/`.
 
+## Pre-flight (run locally before the owner steps)
+`npm run check && npm run test:e2e && npm run verify:subpath` all pass on this branch. The sub-path check serves the production build under `/HumVAi/`, as Pages does, and plays World 1 with no console errors or failed requests. See `docs/RELEASE-QA.md` for the full verified / not-verified list.
+
 ## Status
 **Not deployed and not verified.** No live URL has been loaded, and the workflows have not been run on GitHub. Until they run green and the live URL is smoke-tested (open it, play World 1, reload, check the saved progress), the release gate "deployed and smoke-tested" is **unmet**. The production build, its key scan and the browser tests do pass locally against `vite preview`.
 

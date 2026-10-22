@@ -35,9 +35,24 @@ Method: solver metrics (`tools` lab), reading every briefing and hint, screensho
 ## Decision
 No serious design issue requiring approval. Proceeding with chapters 3-5 under three rules learned here: depth over length, 2-D rooms instead of corridors, boards at most 10 tiles wide.
 
-## After the review: worlds 11-20 (built under those rules, not yet reviewed with the same rigour)
-- **One new mechanic, added only where nothing else gave variety: spring switches.** A switch turns itself off a fixed number of *actions* later (not seconds, so it is fair to a person on a phone and to a model). It adds the one thing the other mechanics could not: time as a resource ("prepare, then dash", "two timers that must overlap"). Used in worlds 17-20. Nothing tells the player the timer; they see the switch pop back (toast, sound, screen-reader text). Verified: engine unit tests, solver, replay, and each world won in a browser.
-- **Chapter 3 (11-12; 9-10 were reviewed above):** pulling a block (11) and logical deduction with four switches (12).
-- **Chapter 4 (13-16):** the world shifts (13, existing), a rule reverses (14), links swap (15), and the puzzle you solved first is not needed (16). Known weakness: World 16 is won in six actions by anyone who walks straight to the exit, so its lesson lands only for players who tried the block first. Worth watching in playtests; it may be better as a hint-free "breather" than a chapter piece.
-- **Chapter 5 (17-20):** spring switches, two timers, a timed chain, and a finale that needs a held plate, a hidden rune and a timed switch in the right order. Known risks: World 19 is a 21-step walk across an open room (tedium risk, many equivalent routes); World 20 is 25 actions with about seven decisions and several irreversible states (recoverable in Scout, costly in the Run); World 18 is 11 tiles wide, one over the 10-tile guideline.
-- **Still true of all 20:** no person has played any of them. Difficulty is likely too low for chapters 1-3 and unknown for 4-5 until real play and real AI attempts exist; budgets are the lever and are cheap to change (version bump).
+## Worlds 11-20, reviewed against the same criteria (second pass)
+Method as above plus a redesign round driven by the findings. Still **no human has played any of them**; "fun" below is judgement, not evidence.
+
+| # | World | Discovery | Optimal | Verdict after the pass |
+|---|---|---|---|---|
+| 11 | Against the Wall | Interact pulls a block, so "stuck" is not stuck | 14 | Keep. Clear single insight; 14 actions with no filler. |
+| 12 | Combination | Work out a four-switch rule by watching the door | 13 | Keep. Real deduction; slack is small (13 of 15), watch in playtests. |
+| 13 | The Garden Shifts | The world changes its rules (existing world) | 11 | Redrawn to 10 tiles wide; same logic. |
+| 14 | Reversal | A rule you relied on reverses | 7 | Keep as a short beat. |
+| 15 | Swapped Wires | Which switch opens which door changes | 8 | Keep as a short beat. |
+| 16 | The Simple Way | The puzzle you solved first is not the cheapest | 7 | **Redesigned** (see below). |
+| 17 | Spring Loaded | Time is a resource: a switch lets go by itself | 11 | Keep. Introduces the one new mechanic with no other load. |
+| 18 | Two Springs | Overlapping timers: the order decides everything | 12 | Narrowed from 11 to 9 tiles; the walk is the point (timers vs distance). |
+| 19 | Two of Three | Any two of three fading switches; use the longest-lasting first | 10 | **Redesigned** (see below). |
+| 20 | The Last Experiment | Plate + rune + timed switch in one room | 15 | **Redesigned** (see below). |
+
+**World 16.** Before: the rune sat on the only path, so anyone walking to the door won in six actions and never met the idea. Now: the rune is off the path, the block puzzle is solvable but costs 15 actions against a 10-action run, and the rune route costs 7. Intended insight, not an accident: *after the world changes, the obvious puzzle can be the expensive one*. A person who solves the block first learns it in Scout and fails the budget deliberately; a person who steps on the rune first gets the door for free. Gated by a test (block-first route longer than the run budget) and by `verify:levels` ("essential by budget").
+**World 19.** Before: a 21-step walk across an open room with 90 equivalent routes, so the decisions were mostly walking. Now: three switches around the start, a rule (any two lit at once) and unequal timers (5, 5, 9). Decisions: which switch first, which pair, where to stand. 10 actions, a test that the longest-lasting switch must come first, no walking filler.
+**World 20 (finale).** Before: two rooms, a gate, 25 actions, and a lot of straight walking. Now: one visible room, a sealed exit, a block and plate, a rune and one fading switch; 15 actions. Understandable failure: every element is on screen from the start, each fails visibly (the switch pops back with a sound and a ring; the door stays sealed until the rune is stepped on), and a lost Run says Try again starts with a fresh Scout. Fair recovery: no dead states (solver-checked), Scout is generous (30 against 15), and the Run has 19. Payoff: a short ending screen with the player's own results and an honest statement about the AI. Difficulty comes from combining three rules, not from walking.
+**Phones.** Every board is at most 10 tiles wide (worlds 5, 7, 10 and 18 were redrawn) and a browser test asserts tiles of at least 36 CSS px on a 390 px phone for every world. Zoom and scrolling boards were considered and not built: with the width cap they are unnecessary, and a partly visible board would hurt planning. Touch accuracy: a tap picks the nearest adjacent switch or block within about one tile; a soft ring marks what Interact will act on.
+**Risks that remain.** Chapters 1-3 are likely too easy for some players and chapter 4's worlds 14-15 are brief; budgets are the lever (a version bump). World 12's tight Run slack and World 20's three-rule combination are the likeliest frustration points. None of this is verified by people.

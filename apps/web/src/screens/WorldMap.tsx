@@ -63,8 +63,8 @@ export function WorldMap({ save, unlockAll, hasSession, onPlay, onBack, onSettin
                 const p = progressOf(save, entry.levelId);
                 const open = isUnlocked(save, entry.levelId, { unlockAll });
                 const n = CAMPAIGN_ORDER.indexOf(entry.levelId) + 1;
-                const optimal = optimalLength(level);
-                const perfect = p.bestUnassistedRun !== null && p.bestUnassistedRun === optimal;
+                // only finished worlds need the shortest length; solving all twenty on every visit would be wasted work
+                const perfect = p.bestUnassistedRun !== null && p.bestUnassistedRun === optimalLength(level);
                 const status = !open ? 'Locked' : p.completed ? (perfect ? 'Shortest possible' : 'Finished') : 'New';
                 return (
                   <li key={entry.levelId}>
@@ -94,7 +94,7 @@ export function WorldMap({ save, unlockAll, hasSession, onPlay, onBack, onSettin
           </section>
         ))}
       </div>
-      <p className="map-foot">More worlds are on the way.</p>
+      <p className="map-foot">Progress is saved on this device only.</p>
     </main>
   );
 }

@@ -84,3 +84,22 @@ test('the scanner itself can fail: a page with an unnamed button and an image wi
   const ids = results.violations.map((v) => v.id);
   expect(ids).toEqual(expect.arrayContaining(['button-name', 'image-alt']));
 });
+
+test('the ending, the completed map and a late world have no serious or critical violations', async ({ page }) => {
+  const ids = ['w01-first-steps', 'w02-orange-switch', 'w06-both-needed', 'w07-off-is-on', 'w03-locked-garden', 'w04-only-when', 'w11-corner-piece', 'w09-hold-the-line', 'w10-in-order', 'w08-heavy-load', 'w12-against-the-wall', 'w13-combination', 'w05-garden-shifts', 'w14-reversal', 'w15-swapped-wires', 'w16-the-simple-way', 'w17-spring-loaded', 'w18-two-springs', 'w19-two-of-three', 'w20-the-last-experiment'];
+  const save = {
+    v: 1,
+    levels: Object.fromEntries(ids.map((id) => [id, { completed: true, attempts: 1, wins: 1, bestRun: 9, bestUnassistedRun: 9, bestActions: null, firstWonAt: '2026-01-01T00:00:00Z', usedHints: false }])),
+    achievements: {},
+    settings: { sound: false, music: false, volume: 0.7, motion: 'system' },
+  };
+  await page.addInitScript((s) => localStorage.setItem('hva.save.v1', JSON.stringify(s)), save);
+  await page.goto('/?screen=map');
+  await scan(page, 'completed map');
+  await page.getByTestId('see-ending').click();
+  await expect(page.getByTestId('finale-title')).toBeVisible();
+  await scan(page, 'finale');
+  await page.goto('/?screen=arena&level=w20-the-last-experiment&briefing=0');
+  await ready(page);
+  await scan(page, 'world 20');
+});

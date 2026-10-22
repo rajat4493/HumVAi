@@ -23,7 +23,8 @@
     "runner": "npm run runner --workspace @hva/runner --",
     "scan:bundle": "node tools/scan-bundle.mjs",
     "fixtures": "tsx tools/make-fixtures.ts",
-    "verify:recordings": "tsx tools/verify-recordings.ts"
+    "verify:recordings": "tsx tools/verify-recordings.ts",
+    "verify:subpath": "node tools/check-subpath.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.10.2",
