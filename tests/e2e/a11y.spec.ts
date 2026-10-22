@@ -45,6 +45,7 @@ test('every screen has no serious or critical automated accessibility violations
   await page.waitForTimeout(1800);
   await scan(page, 'result reveal');
   await page.getByTestId('watch-ai').click();
+  await page.waitForTimeout(900); // let the panel finish fading in: Firefox flagged a mid-animation contrast reading
   await scan(page, 'replay');
 });
 

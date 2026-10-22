@@ -103,22 +103,27 @@ test('holding a key does not burn budget', async ({ page, isMobile }) => {
   expect((await state(page)).run.used).toBe(1);
 });
 
-test('layout has no horizontal scroll and the board is large enough on every world', async ({ page }) => {
-  for (const level of CAMPAIGN_ORDER) {
-    await page.goto(`/?screen=arena&briefing=0&level=${level}&unlock=all`);
-    await expect(page.locator('canvas')).toBeVisible();
-    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-    expect(overflow).toBeLessThanOrEqual(0);
-    const box = await page.locator('canvas').boundingBox();
-    expect(box && box.width > 200 && box.height > 150).toBe(true);
-    await ready(page);
-    const tile = await page.evaluate(() => {
-      const h = (window as unknown as { __HVA__: { tileCenter(x: number, y: number): { x: number; y: number } | null } }).__HVA__;
-      const a = h.tileCenter(0, 0)!;
-      const b = h.tileCenter(1, 0)!;
-      return b.x - a.x;
-    });
-    expect(tile, `${level}: tile size in CSS px`).toBeGreaterThanOrEqual(36); // phone-sized boards must stay tappable
+test('layout has no horizontal scroll and the board is large enough on every world', async ({ page, isMobile }) => {
+  // Phones are checked at a roomy height and at a short one (a browser's toolbars take height; WebKit's iPhone profile is 664 px tall).
+  const sizes = isMobile ? [{ width: 390, height: 780, min: 36 }, { width: 390, height: 664, min: 34 }] : [{ width: 0, height: 0, min: 36 }];
+  for (const size of sizes) {
+    if (size.width) await page.setViewportSize({ width: size.width, height: size.height });
+    for (const level of CAMPAIGN_ORDER) {
+      await page.goto(`/?screen=arena&briefing=0&level=${level}&unlock=all`);
+      await expect(page.locator('canvas')).toBeVisible();
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow).toBeLessThanOrEqual(0);
+      const box = await page.locator('canvas').boundingBox();
+      expect(box && box.width > 200 && box.height > 150).toBe(true);
+      await ready(page);
+      const tile = await page.evaluate(() => {
+        const h = (window as unknown as { __HVA__: { tileCenter(x: number, y: number): { x: number; y: number } | null } }).__HVA__;
+        const a = h.tileCenter(0, 0)!;
+        const b = h.tileCenter(1, 0)!;
+        return b.x - a.x;
+      });
+      expect(tile, `${level} at ${size.height || 'desktop'}px: tile size in CSS px`).toBeGreaterThanOrEqual(size.min);
+    }
   }
 });
 

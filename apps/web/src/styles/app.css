@@ -1571,3 +1571,40 @@ input[type='range'] {
     animation: none;
   }
 }
+
+/* ---------- phones: keep the board as large as the screen allows ---------- */
+@media (max-width: 760px), (orientation: portrait) and (max-width: 1000px) {
+  /* hints and menu sit beside the action bar instead of on a row of their own */
+  .hud {
+    grid-template-columns: 1fr auto auto;
+  }
+  .hud-left {
+    grid-column: 1 / 3;
+  }
+  .budget .phase-pill {
+    grid-column: 3;
+  }
+  .budget .pips,
+  .budget .bar {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .budget .icon-btn {
+    grid-row: 2;
+  }
+}
+/* Short phone screens (a browser's toolbars take height): the board matters more than the two side cards, whose facts
+   (actions left, the AI note) are also in the action bar and the result screen. */
+@media (max-height: 720px) and (max-width: 760px) {
+  .arena {
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      'hud hud'
+      'board board'
+      'pad pad';
+    row-gap: 8px;
+  }
+  .arena > .actor {
+    display: none;
+  }
+}
