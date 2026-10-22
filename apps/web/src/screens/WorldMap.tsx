@@ -12,9 +12,10 @@ interface Props {
   onBack: () => void;
   onSettings: () => void;
   onHall: () => void;
+  onFinale?: () => void;
 }
 
-export function WorldMap({ save, unlockAll, hasSession, onPlay, onBack, onSettings, onHall }: Props) {
+export function WorldMap({ save, unlockAll, hasSession, onPlay, onBack, onSettings, onHall, onFinale }: Props) {
   const done = completedCount(save);
   const next = CAMPAIGN_ORDER.find((id) => isUnlocked(save, id, { unlockAll }) && !progressOf(save, id).completed) ?? null;
   return (
@@ -39,6 +40,11 @@ export function WorldMap({ save, unlockAll, hasSession, onPlay, onBack, onSettin
         </div>
       </header>
 
+      {done === CAMPAIGN_ORDER.length && onFinale && (
+        <button className="btn continue" data-testid="see-ending" onClick={onFinale}>
+          The experiment is complete: see the ending
+        </button>
+      )}
       {(hasSession || next) && (
         <button className="btn continue" data-testid="continue" onClick={() => onPlay((hasSession ?? next) as string)}>
           {hasSession ? 'Continue your run' : done === 0 ? 'Start the first world' : 'Next world'}

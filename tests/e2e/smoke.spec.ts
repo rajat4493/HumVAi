@@ -76,18 +76,18 @@ test('world 3: drag a block back off the plate (recoverable), then win', async (
 test('world 5: the world visibly changes, and only then can it be won', async ({ page, isMobile }) => {
   await page.goto('/?screen=arena&briefing=0&level=w05-garden-shifts&unlock=all');
   // phase-0 strategy in the scout: open the gate, toggle switch-two next to the far door: nothing happens
-  await play(page, 'R I RRRRRR I', !!isMobile);
+  await play(page, 'R I RRRRD I', !!isMobile);
   let s = await state(page);
   expect(s.entities.find((e) => e.id === 'door-far')?.state).toBe('closed');
   expect(s.epoch).toBe(0);
-  await play(page, 'LLD', !!isMobile); // step on the rune at (6,2)
+  await play(page, 'L', !!isMobile); // step on the rune at (5,2)
   s = await state(page);
   expect(s.epoch).toBe(1);
   expect(s.entities.find((e) => e.id === 'door-far')?.state).toBe('open'); // switch-two was already on
-  await play(page, 'URRRR', !!isMobile);
+  await play(page, 'RURR', !!isMobile);
   s = await state(page);
   // standing on the exit while scouting does NOT start the run: the player commits explicitly
-  expect(s).toMatchObject({ phase: 'explore', status: 'playing', player: { x: 10, y: 1 } });
+  expect(s).toMatchObject({ phase: 'explore', status: 'playing', player: { x: 8, y: 1 } });
   await expect(page.locator('.toast')).toContainText('found the exit');
   await play(page, 'C', !!isMobile);
   s = await state(page);
@@ -111,6 +111,14 @@ test('layout has no horizontal scroll and the board is large enough on every wor
     expect(overflow).toBeLessThanOrEqual(0);
     const box = await page.locator('canvas').boundingBox();
     expect(box && box.width > 200 && box.height > 150).toBe(true);
+    await ready(page);
+    const tile = await page.evaluate(() => {
+      const h = (window as unknown as { __HVA__: { tileCenter(x: number, y: number): { x: number; y: number } | null } }).__HVA__;
+      const a = h.tileCenter(0, 0)!;
+      const b = h.tileCenter(1, 0)!;
+      return b.x - a.x;
+    });
+    expect(tile, `${level}: tile size in CSS px`).toBeGreaterThanOrEqual(36); // phone-sized boards must stay tappable
   }
 });
 

@@ -20,6 +20,66 @@
     {
       "challengeId": "w05-garden-shifts",
       "file": "w05-garden-shifts.json"
+    },
+    {
+      "challengeId": "w06-both-needed",
+      "file": "w06-both-needed.json"
+    },
+    {
+      "challengeId": "w07-off-is-on",
+      "file": "w07-off-is-on.json"
+    },
+    {
+      "challengeId": "w08-heavy-load",
+      "file": "w08-heavy-load.json"
+    },
+    {
+      "challengeId": "w09-hold-the-line",
+      "file": "w09-hold-the-line.json"
+    },
+    {
+      "challengeId": "w10-in-order",
+      "file": "w10-in-order.json"
+    },
+    {
+      "challengeId": "w11-corner-piece",
+      "file": "w11-corner-piece.json"
+    },
+    {
+      "challengeId": "w12-against-the-wall",
+      "file": "w12-against-the-wall.json"
+    },
+    {
+      "challengeId": "w13-combination",
+      "file": "w13-combination.json"
+    },
+    {
+      "challengeId": "w14-reversal",
+      "file": "w14-reversal.json"
+    },
+    {
+      "challengeId": "w15-swapped-wires",
+      "file": "w15-swapped-wires.json"
+    },
+    {
+      "challengeId": "w16-the-simple-way",
+      "file": "w16-the-simple-way.json"
+    },
+    {
+      "challengeId": "w17-spring-loaded",
+      "file": "w17-spring-loaded.json"
+    },
+    {
+      "challengeId": "w18-two-springs",
+      "file": "w18-two-springs.json"
+    },
+    {
+      "challengeId": "w19-two-of-three",
+      "file": "w19-two-of-three.json"
+    },
+    {
+      "challengeId": "w20-the-last-experiment",
+      "file": "w20-the-last-experiment.json"
     }
   ]
 }

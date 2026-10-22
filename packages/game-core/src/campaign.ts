@@ -168,9 +168,9 @@ export const CAMPAIGN: readonly Chapter[] = [
       {
         levelId: 'w16-the-simple-way',
         hints: [
-          'Before you solve the puzzle, find out whether the world stays the same.',
-          'The rune flips the door: afterwards it opens when the plate is not pressed.',
-          'Skip the block. Walk down to the rune and through the door.',
+          'Look closely at everything in the room before you commit to the obvious puzzle.',
+          'The rune changes the door\'s rule. Afterwards it opens when the plate is not pressed.',
+          'Skip the block. Step on the rune, then walk back around to the door.',
         ],
       },
     ],
@@ -197,19 +197,19 @@ export const CAMPAIGN: readonly Chapter[] = [
         ],
       },
       {
-        levelId: 'w19-chain-reaction',
+        levelId: 'w19-two-of-three',
         hints: [
-          'Some switches refuse to move until another is lit. Notice the order, and that nothing stays lit.',
-          'Each switch needs the one before it, each fades, and the door needs the last one.',
-          'Flip the top switch, then the middle one, then the bottom-left one, without stopping, and take the door.',
+          'Try the switches one at a time, then in pairs. Watch the door, and watch how long each one stays lit.',
+          'The door opens when any two of the three are lit at once. The bottom switch lasts longest, so use it first.',
+          'Flip the bottom switch, then walk to the left or right switch and flip it, then go straight up to the door.',
         ],
       },
       {
         levelId: 'w20-the-last-experiment',
         hints: [
-          'The exit is sealed and nothing in the upper room opens it. Look for what changes the world.',
-          'Three things are needed at once: the plate held down, the rune stepped on, and the fading switch flipped last.',
-          'Block onto the plate, through the gate, west to the rune, then flip the switch and run to the exit door.',
+          'The exit is sealed. Look for what changes the world, and for what the plate and the switch are for.',
+          'Three things must be true at once: the plate held down, the rune stepped on, and the fading switch lit. Do the fading one last.',
+          'Block onto the plate, step on the rune, then flip the switch and run straight to the exit door.',
         ],
       },
     ],

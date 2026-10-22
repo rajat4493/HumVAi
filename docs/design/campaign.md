@@ -11,7 +11,7 @@ Move, look, and learn that the world has rules you were not told.
 | 1 | First Steps (`w01-first-steps`) | Movement, walls, and that every action spends budget. | 8 | 0 / 12 |
 | 2 | The Orange Switch (`w02-orange-switch`) | Switches change the world; some switches matter and some do not. | 9 | 16 / 12 |
 | 3 | Both Needed (`w06-both-needed`) | Some things need more than one condition at once. | 12 | 20 / 16 |
-| 4 | Off Is On (`w07-off-is-on`) | The state of the world matters, not just what you toggle. | 9 | 16 / 12 |
+| 4 | Off Is On (`w07-off-is-on`) | The state of the world matters, not just what you toggle. | 8 | 16 / 12 |
 
 ## The Unknown
 
@@ -30,7 +30,7 @@ Plan before you move. Budgets tighten and order matters.
 
 | # | World | What it teaches | Optimal | Scout / Run |
 |---|---|---|---|---|
-| 9 | In Order (`w10-in-order`) | Dependencies form a chain: find the order, then the final twist. | 16 | 15 / 20 |
+| 9 | In Order (`w10-in-order`) | Dependencies form a chain: find the order, then the final twist. | 13 | 15 / 20 |
 | 10 | Heavy Load (`w08-heavy-load`) | Objects can share a job, and one job can unlock the next: plan the order. | 13 | 22 / 17 |
 | 11 | Against the Wall (`w12-against-the-wall`) | Pushing is not the only way to move a block: Interact pulls it. | 14 | 24 / 18 |
 | 12 | Combination (`w13-combination`) | A door can combine several conditions. Test, watch the door, and work out which switches matter. | 13 | 16 / 15 |
@@ -41,10 +41,10 @@ What you learned may stop being true.
 
 | # | World | What it teaches | Optimal | Scout / Run |
 |---|---|---|---|---|
-| 13 | The Garden Shifts (`w05-garden-shifts`) | The world can change its rules; what you learned about a switch may stop (or start) being true. | 13 | 20 / 16 |
+| 13 | The Garden Shifts (`w05-garden-shifts`) | The world can change its rules; what you learned about a switch may stop (or start) being true. | 11 | 20 / 16 |
 | 14 | Reversal (`w14-reversal`) | A rule you relied on can reverse. Notice the change, then adapt. | 7 | 14 / 10 |
 | 15 | Swapped Wires (`w15-swapped-wires`) | The links between things can change, not just single rules. Re-test what you trusted. | 8 | 16 / 11 |
-| 16 | The Simple Way (`w16-the-simple-way`) | When the world changes, check whether the hard part still matters. | 6 | 26 / 10 |
+| 16 | The Simple Way (`w16-the-simple-way`) | When the world changes, check whether the hard part still matters. | 7 | 26 / 10 |
 
 ## The Frontier
 
@@ -53,6 +53,6 @@ Everything at once, and some things do not wait for you.
 | # | World | What it teaches | Optimal | Scout / Run |
 |---|---|---|---|---|
 | 17 | Spring Loaded (`w17-spring-loaded`) | Some things do not stay as you leave them. Time is a resource too. | 11 | 20 / 13 |
-| 18 | Two Springs (`w18-two-springs`) | When several timed things must overlap, the order you do them in decides everything. | 16 | 26 / 20 |
-| 19 | Chain Reaction (`w19-chain-reaction`) | Dependencies and timing together: set the chain in motion and keep ahead of it. | 21 | 22 / 24 |
-| 20 | The Last Experiment (`w20-the-last-experiment`) | Combine it all: prepare, discover what changes the world, then act before time runs out. | 25 | 26 / 32 |
+| 18 | Two Springs (`w18-two-springs`) | When several timed things must overlap, the order you do them in decides everything. | 12 | 20 / 15 |
+| 19 | Two of Three (`w19-two-of-three`) | Find the rule, find which switch lasts longest, and put them in the right order. | 10 | 20 / 15 |
+| 20 | The Last Experiment (`w20-the-last-experiment`) | Combine it all: find what changes the world, set it up, then act before time runs out. | 15 | 30 / 19 |

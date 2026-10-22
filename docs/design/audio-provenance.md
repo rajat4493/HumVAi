@@ -4,7 +4,7 @@
 
 | Asset | How it is made | Source file |
 |---|---|---|
-| 23 sound cues (steps, bumps, pushes, drags, switches, doors, plates, the world-change shimmer, commit, exit found, win, loss, UI tick, four reveal cues, the AI replay tick) | Web Audio oscillators (sine, triangle) with gain envelopes and, for thuds and slides, a short deterministic low-pass noise burst. Frequencies, durations and levels are the data table `CUES` | `apps/web/src/audio/engine.ts` |
+| 25 sound cues (steps, bumps, pushes, drags, switches, doors, plates, the world-change shimmer, commit, exit found, win, loss, UI tick, four reveal cues, the AI replay tick, the spring-switch pop, the campaign-complete fanfare) | Web Audio oscillators (sine, triangle) with gain envelopes and, for thuds and slides, a short deterministic low-pass noise burst. Frequencies, durations and levels are the data table `CUES` | `apps/web/src/audio/engine.ts` |
 | Background music | A generative ambient pad (three triangle voices per chord, four-chord loop, 6 s per chord) and a sparse sine "bell" line over an A-minor pentatonic scale. Note choice is a fixed hash of the step number, so it is deterministic: the same music every time, no randomness, no recorded or sampled material | `apps/web/src/audio/engine.ts` (`scheduleMusic`) |
 | Event to cue mapping | Pure function of engine events | `apps/web/src/audio/cues.ts` |
 

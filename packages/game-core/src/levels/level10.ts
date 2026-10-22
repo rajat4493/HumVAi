@@ -2,17 +2,17 @@ import type { ChallengeDefinition } from '../types';
 
 export const level10: ChallengeDefinition = {
   id: 'w10-in-order',
-  version: 1,
+  version: 2,
   name: 'In Order',
   briefing: 'Three switches, one door. Some of them refuse to move until something else has.',
   learning: 'Dependencies form a chain: find the order, then the final twist.',
   difficulty: 4,
   budget: { explore: 15, execute: 20 },
   map: [
-    '#############',
-    '#@.......D.E#',
-    '#..a.b.c.####',
-    '#############',
+    '##########',
+    '#@.....DE#',
+    '#.a.b.c.##',
+    '##########',
   ],
   legend: {
     a: { kind: 'switch', id: 'switch-one' },

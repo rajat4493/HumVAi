@@ -354,12 +354,12 @@ describe('level 5 — the rule change is essential', () => {
     expect(events).toContainEqual({ type: 'EPOCH_CHANGED', epoch: 1 });
     expect(obs.epoch).toBe(1);
     expect(doorState(obs, 'door-far')).toBe('closed'); // switch-two is still off
-    const after = play(R5, [...mv('R'), use('switch-one'), ...mv('RRRDRR'), use('switch-two')]);
+    const after = play(R5, [...mv('R'), use('switch-one'), ...mv('RRRDR'), use('switch-two')]);
     expect(doorState(after.obs, 'door-far')).toBe('open');
   });
 
   it('before the rune, switch-two is a dud: it toggles but the far door stays sealed', () => {
-    const { obs, events } = play(R5, [...mv('R'), use('switch-one'), ...mv('RRRRRR'), use('switch-two')]);
+    const { obs, events } = play(R5, [...mv('R'), use('switch-one'), ...mv('RRRRD'), use('switch-two')]);
     expect(events.at(-1)).toEqual({ type: 'SWITCH_TOGGLED', id: 'switch-two', on: true });
     expect(doorState(obs, 'door-far')).toBe('closed');
   });
@@ -382,18 +382,17 @@ describe('level 5 — the rule change is essential', () => {
   });
 
   it('the "phase-0 strategy" (open the gate, toggle switch-two beside the far door, walk through) fails and eventually loses', () => {
-    const ignoring = [...mv('R'), use('switch-one'), ...mv('RRRRRR'), use('switch-two'), ...Array.from({ length: 20 }, () => mv('R')[0] as GameAction)];
+    const ignoring = [...mv('R'), use('switch-one'), ...mv('RRRRD'), use('switch-two'), ...Array.from({ length: 20 }, () => mv('R')[0] as GameAction)];
     const out = replay(R5, ignoring);
     expect(out.won).toBe(false);
     expect(out.status).toBe('lost');
   });
 
-  it('order matters under the strict run: toggling switch-two before the rune works but costs 17 > 16 actions', () => {
-    const early = [...mv('R'), use('switch-one'), ...mv('RRRRRR'), use('switch-two'), ...mv('LLD'), ...mv('URRRR')];
-    expect(early).toHaveLength(17);
-    expect(replay(R5, early)).toMatchObject({ won: false, status: 'lost', runActions: 16 });
-    expect(replay({ ...R5, budget: { explore: 0, execute: 17 } }, early)).toMatchObject({ won: true, runActions: 17 });
-    expect(solve(l5).optimalLength).toBe(13);
+  it('toggling switch-two before the rune is not wasted, but the planned order is shorter (13 vs 11 actions)', () => {
+    const early = [...mv('R'), use('switch-one'), ...mv('RRRRD'), use('switch-two'), ...mv('L'), ...mv('RURR')];
+    expect(early).toHaveLength(13);
+    expect(replay(R5, early)).toMatchObject({ won: true, runActions: 13 });
+    expect(solve(l5).optimalLength).toBe(11);
   });
 });
 

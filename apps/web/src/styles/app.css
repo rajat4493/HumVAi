@@ -409,6 +409,8 @@ h3,
       'human ai'
       'pad pad';
     gap: 10px;
+    padding-left: 6px;
+    padding-right: 6px;
     padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
   .pad {
@@ -1467,5 +1469,105 @@ input[type='range'] {
   from {
     opacity: 0;
     transform: translateY(6px);
+  }
+}
+
+/* ---------- campaign finale ---------- */
+.finale {
+  position: relative;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 18px clamp(16px, 4vw, 32px) 48px;
+  text-align: center;
+}
+.finale > * {
+  position: relative;
+}
+.finale-glow {
+  position: absolute;
+  inset: -40px -20px auto;
+  height: 420px;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 30%, rgb(255 179 71 / 0.28), rgb(111 140 255 / 0.18) 45%, transparent 70%);
+  animation: finale-breathe 6s ease-in-out infinite;
+}
+@keyframes finale-breathe {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+.finale .map-head {
+  justify-content: space-between;
+}
+.finale-title {
+  font-size: clamp(2rem, 7vw, 3.4rem);
+  margin: 4px 0 10px;
+  animation: finale-rise 0.8s var(--ease-out) both;
+}
+@keyframes finale-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.finale-lead {
+  max-width: 54ch;
+  margin: 0 auto 22px;
+  color: var(--ink-dim);
+  font-size: 1.05rem;
+  animation: finale-rise 0.8s 0.15s var(--ease-out) both;
+}
+.finale-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 0 0 18px;
+  animation: finale-rise 0.8s 0.3s var(--ease-out) both;
+}
+.finale-stats > div {
+  padding: 14px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--glass);
+  box-shadow: inset 0 0 0 1.5px var(--glass-edge);
+}
+.finale-stats dt {
+  font-size: 0.82rem;
+  color: var(--ink-dim);
+}
+.finale-stats dd {
+  margin: 4px 0 0;
+  font: 800 1.7rem var(--font-display);
+  color: var(--human);
+}
+.finale-ai {
+  max-width: 60ch;
+  margin: 0 auto 22px;
+}
+.finale-actions {
+  justify-content: center;
+  flex-wrap: wrap;
+}
+:root[data-motion='reduced'] .finale-glow,
+:root[data-motion='reduced'] .finale-title,
+:root[data-motion='reduced'] .finale-lead,
+:root[data-motion='reduced'] .finale-stats {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion='full']) .finale-glow,
+  :root:not([data-motion='full']) .finale-title,
+  :root:not([data-motion='full']) .finale-lead,
+  :root:not([data-motion='full']) .finale-stats {
+    animation: none;
   }
 }

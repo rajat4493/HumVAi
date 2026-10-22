@@ -42,6 +42,23 @@ describe('campaign table', () => {
     ]);
   });
 
+  it('boards are at most 10 tiles wide so tiles stay comfortable on a phone', () => {
+    for (const l of LEVELS) expect(Math.max(...l.map.map((r) => r.length)), l.id).toBeLessThanOrEqual(10);
+  });
+
+  it('World 16: the obvious block puzzle is solvable but does not fit the run; the rune route does', () => {
+    const l = levelById('w16-the-simple-way')!;
+    const blockFirst = solve(l, { stayInEpoch0: true });
+    expect(blockFirst.solvable).toBe(true);
+    expect(blockFirst.optimalLength as number).toBeGreaterThan(l.budget.execute);
+    expect(solve(l).optimalLength as number).toBeLessThanOrEqual(l.budget.execute);
+  });
+
+  it('World 19: the longest-lasting switch has to be used first', () => {
+    const first = (solve(levelById('w19-two-of-three')!).optimalSolution as GameAction[]).find((a) => a.type === 'INTERACT');
+    expect(first).toEqual({ type: 'INTERACT', targetId: 'switch-three' });
+  });
+
   it('timing worlds: Two Springs must start with the slower-fading left switch', () => {
     const first = (solve(levelById('w18-two-springs')!).optimalSolution as GameAction[]).find((a) => a.type === 'INTERACT');
     expect(first).toEqual({ type: 'INTERACT', targetId: 'switch-left' });

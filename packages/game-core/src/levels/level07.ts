@@ -2,17 +2,17 @@ import type { ChallengeDefinition } from '../types';
 
 export const level07: ChallengeDefinition = {
   id: 'w07-off-is-on',
-  version: 1,
+  version: 2,
   name: 'Off Is On',
   briefing: 'The exit is behind a door. Two switches glow. A glowing switch is not always a good sign.',
   learning: 'The state of the world matters, not just what you toggle.',
   difficulty: 2,
   budget: { explore: 16, execute: 12 },
   map: [
-    '###########',
-    '#@......DE#',
-    '##a##b#####',
-    '###########',
+    '##########',
+    '#@.....DE#',
+    '##a##b####',
+    '##########',
   ],
   legend: {
     a: { kind: 'switch', id: 'switch-circle' },

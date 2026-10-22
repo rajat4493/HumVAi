@@ -178,6 +178,13 @@ describe('events to cues', () => {
     expect(many).toHaveLength(3);
   });
 
+  it('a switch that goes off by itself is a spring pop; one the player pressed is a plain switch-off', () => {
+    const off: GameEvent = { type: 'SWITCH_TOGGLED', id: 's', on: false };
+    expect(cuesForEvents([{ type: 'MOVED', from: { x: 0, y: 0 }, to: { x: 1, y: 0 } }, off], { type: 'MOVE', direction: 'RIGHT' })).toEqual(['spring_pop', 'step']);
+    expect(cuesForEvents([off], { type: 'INTERACT', targetId: 's' })).toEqual(['switch_off']);
+    expect(cuesForEvents([{ type: 'SWITCH_TOGGLED', id: 'a', on: true }, { type: 'SWITCH_TOGGLED', id: 'b', on: false }], { type: 'INTERACT', targetId: 'a' })).toEqual(['switch_on', 'spring_pop']);
+  });
+
   it('a commit is one cue; a plain reset is a reset cue', () => {
     expect(ev({ type: 'RESET' }, { type: 'COMMITTED', reason: 'player' })).toEqual(['commit']);
     expect(ev({ type: 'RESET' })).toEqual(['reset']);

@@ -18,7 +18,7 @@ import { optimalLength } from '../lib/solve';
 import { useOpponent } from '../opponent/useOpponent';
 import { ReplayPanel } from '../replay/ReplayPanel';
 import { Reveal } from './Reveal';
-import { progressOf, recordLoss, recordWin } from '../save/save';
+import { completedCount, progressOf, recordLoss, recordWin } from '../save/save';
 import type { SaveStore } from '../save/store';
 
 interface Props {
@@ -29,6 +29,7 @@ interface Props {
   skipBriefing: boolean;
   onMap: () => void;
   onNext: (() => void) | null;
+  onFinish?: () => void;
 }
 
 interface ResultInfo {
@@ -44,7 +45,7 @@ interface ResultInfo {
   achievements: string[];
 }
 
-export function Arena({ challenge, index, total, store, skipBriefing, onMap, onNext }: Props) {
+export function Arena({ challenge, index, total, store, skipBriefing, onMap, onNext, onFinish }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const ctl = useRef<GameController | null>(null);
   const recorded = useRef(false);
@@ -83,7 +84,7 @@ export function Arena({ challenge, index, total, store, skipBriefing, onMap, onN
       setSnap(s);
       audio.setIntensity(s.obs.phase === 'explore' ? 'scout' : 'run');
       if (s.action) setAnnounce(`${captionFor({ action: s.action, valid: true, events: s.events })} ${s.obs.actionsRemaining} actions left in the ${s.obs.phase === 'explore' ? 'scout' : 'run'}.`);
-      for (const cue of cuesForEvents(s.events)) audio.play(cue);
+      for (const cue of cuesForEvents(s.events, s.action)) audio.play(cue);
       if (s.obs.status === 'playing' && c.log.length > 0) {
         store.setSession({ v: 1, levelId: challenge.id, levelVersion: challenge.version, actions: [...c.log], hintsUsed: hintsRef.current, startedAt: startedAt.current });
       }
@@ -155,6 +156,7 @@ export function Arena({ challenge, index, total, store, skipBriefing, onMap, onN
     ctl.current?.restart();
   };
 
+  const allDone = !onNext && !!result?.won && completedCount(store.get()) >= total;
   const phase = obs?.phase ?? (scouts ? 'explore' : 'execute');
   const dispatch = ctl.current?.dispatch.bind(ctl.current);
   const current = obs ? (phase === 'explore' ? obs.scout : obs.run) : null;
@@ -381,6 +383,12 @@ export function Arena({ challenge, index, total, store, skipBriefing, onMap, onN
             onReplay={() => setReplay('ai')}
             onShortest={() => setReplay('shortest')}
           />
+          {!result.won && (
+            <ul className="result-notes chips" data-testid="loss-notes">
+              <li>Try again starts with a fresh Scout. What you learned stays with you.</li>
+              {result.hintsUsed === 0 && <li>Stuck? The lightbulb has three hints; using one marks the run as assisted.</li>}
+            </ul>
+          )}
           {result.won && (
             <ul className="result-notes chips">
               {result.newUnassistedBest && result.hintsUsed === 0 && <li className="good">New personal best.</li>}
@@ -403,11 +411,16 @@ export function Arena({ challenge, index, total, store, skipBriefing, onMap, onN
                 Next world
               </button>
             )}
+            {allDone && onFinish && (
+              <button className="btn" data-autofocus data-testid="finish-experiment" onClick={onFinish}>
+                Finish the experiment
+              </button>
+            )}
             <button className="btn ghost" onClick={onMap}>
               Map
             </button>
           </div>
-          {result.won && !onNext && <p className="note">That was the last world in this build.</p>}
+          {result.won && !onNext && !allDone && <p className="note">That was the last world. Finish the others to complete the experiment.</p>}
         </Modal>
       )}
     </div>

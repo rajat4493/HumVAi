@@ -28,3 +28,20 @@ export function shareText(i: ShareInput): string {
   lines.push(VERDICT[i.outcome]);
   return lines.join('\n');
 }
+
+export interface FinaleShareInput {
+  finished: number;
+  total: number;
+  /** Worlds finished with no hints in the fewest possible actions. */
+  shortest: number;
+  /** Worlds that needed a hint at some point. */
+  assisted: number;
+}
+
+/** Spoiler-free completion summary: no world names, no solutions, no AI claims. */
+export function finaleShareText(i: FinaleShareInput): string {
+  const lines = ['Humans vs AI · The Experiment', `I finished ${i.finished} of ${i.total} worlds.`];
+  if (i.shortest > 0) lines.push(`${i.shortest} with the shortest possible run.`);
+  lines.push(i.assisted === 0 ? 'No hints used.' : `${i.assisted} with a hint or two.`);
+  return lines.join('\n');
+}

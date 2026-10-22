@@ -1,23 +1,22 @@
 import type { ChallengeDefinition } from '../types';
 
 export const level19: ChallengeDefinition = {
-  id: 'w19-chain-reaction',
-  version: 1,
-  name: 'Chain Reaction',
-  briefing: 'Three switches around a room. Some will not move until another is lit, and nothing stays lit for long.',
-  learning: 'Dependencies and timing together: set the chain in motion and keep ahead of it.',
+  id: 'w19-two-of-three',
+  version: 2,
+  name: 'Two of Three',
+  briefing: 'Three switches and a door. None of them stays lit for long, and they do not last equally long.',
+  learning: 'Find the rule, find which switch lasts longest, and put them in the right order.',
   difficulty: 5,
-  budget: { explore: 22, execute: 24 },
+  budget: { explore: 20, execute: 15 },
   map: [
-    '##########',
-    '#@a......#',
-    '#........#',
-    '#.....b..#',
-    '#........#',
-    '#c.......#',
-    '#######D##',
-    '#######E##',
-    '##########',
+    '#########',
+    '####E####',
+    '####D####',
+    '#.......#',
+    '#a.....b#',
+    '#...@...#',
+    '#...c...#',
+    '#########',
   ],
   legend: {
     a: { kind: 'switch', id: 'switch-one' },
@@ -26,13 +25,9 @@ export const level19: ChallengeDefinition = {
     D: { kind: 'door', id: 'door-exit' },
   },
   rules: {
-    switchTimers: { 'switch-one': 8, 'switch-two': 8 },
-    switchEnabled: {
-      'switch-two': { op: 'on', id: 'switch-one' },
-      'switch-three': { op: 'on', id: 'switch-two' },
-    },
+    switchTimers: { 'switch-one': 5, 'switch-two': 5, 'switch-three': 9 },
     doors: {
-      'door-exit': { op: 'on', id: 'switch-three' },
+      'door-exit': { op: 'or', args: [{ op: 'and', args: [{ op: 'on', id: 'switch-one' }, { op: 'on', id: 'switch-two' }] }, { op: 'and', args: [{ op: 'on', id: 'switch-one' }, { op: 'on', id: 'switch-three' }] }, { op: 'and', args: [{ op: 'on', id: 'switch-two' }, { op: 'on', id: 'switch-three' }] }] },
     },
   },
 };

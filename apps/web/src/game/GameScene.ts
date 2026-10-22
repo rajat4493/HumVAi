@@ -12,6 +12,8 @@ export class GameScene extends Phaser.Scene {
   private floors: { img: Img; parity: 'A' | 'B' }[] = [];
   private sprites = new Map<string, Img>();
   private player!: Img;
+  /** Soft rings on the switches and blocks the player is next to: what Interact (or a tap) will act on. */
+  private rings = new Map<string, Phaser.GameObjects.Arc>();
   private exit!: Img;
   private reduced = false;
   private dims = { w: 1, h: 1 };
@@ -67,6 +69,7 @@ export class GameScene extends Phaser.Scene {
   private build(o: PublicGameState): void {
     this.board.removeAll(true);
     this.sprites.clear();
+    this.rings.clear();
     this.floors = [];
     this.dims = { w: o.width * TILE, h: o.height * TILE + 16 };
 
@@ -103,6 +106,12 @@ export class GameScene extends Phaser.Scene {
       const img = this.add.image(c.x, c.y, this.textureFor(e)).setDepth(e.kind === 'plate' || e.kind === 'tripwire' ? 2 : e.pos.y * 10 + 6);
       this.sprites.set(e.id, img);
       this.board.add(img);
+      if (this.ctl.avatar === 'human' && (e.kind === 'switch' || e.kind === 'block')) {
+        const ring = this.add.circle(c.x, c.y + 6, 46).setStrokeStyle(4, C.human, 0.85).setFillStyle(C.human, 0.1).setDepth(e.pos.y * 10 + 5.5).setVisible(false);
+        this.rings.set(e.id, ring);
+        this.board.add(ring);
+        if (!this.reduced) this.tweens.add({ targets: ring, alpha: { from: 0.55, to: 1 }, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+      }
     }
 
     const pc = this.cell(o.player.x, o.player.y);
@@ -135,6 +144,13 @@ export class GameScene extends Phaser.Scene {
       const tex = this.textureFor(e);
       if (s.texture.key !== tex) s.setTexture(tex);
     }
+    for (const e of o.entities) {
+      const ring = this.rings.get(e.id);
+      if (!ring) continue;
+      const c = this.cell(e.pos.x, e.pos.y);
+      ring.setPosition(c.x, c.y + 6).setDepth(e.pos.y * 10 + 5.5);
+      ring.setVisible(Math.abs(o.player.x - e.pos.x) + Math.abs(o.player.y - e.pos.y) === 1 && o.status === 'playing');
+    }
     const theme = o.epoch >= 1 ? 'Shift' : o.phase === 'explore' ? 'Scout' : '';
     this.floors.forEach((f) => {
       const key = `floor${theme}${f.parity}`;
@@ -144,7 +160,8 @@ export class GameScene extends Phaser.Scene {
 
   private layout(): void {
     const { width, height } = this.scale;
-    const pad = Math.min(width, height) * 0.04;
+    // phones need every pixel of width for tappable tiles; larger screens get breathing room
+    const pad = width < 520 ? 6 : Math.min(width, height) * 0.04;
     const s = Math.min((width - pad * 2) / this.dims.w, (height - pad * 2) / this.dims.h);
     this.board.setScale(s);
     this.board.setPosition((width - this.dims.w * s) / 2, (height - this.dims.h * s) / 2);
@@ -205,9 +222,15 @@ export class GameScene extends Phaser.Scene {
         case 'COMMITTED':
           this.cameras.main.fadeIn(320, 11, 16, 38);
           break;
-        case 'SWITCH_TOGGLED':
-          this.pulse(this.sprites.get(ev.id));
+        case 'SWITCH_TOGGLED': {
+          const bySelf =
+            !ev.on &&
+            (events.some((e) => e.type === 'MOVED' || e.type === 'BLOCKED' || e.type === 'PUSHED' || e.type === 'PULLED') ||
+              events.some((e) => e.type === 'SWITCH_TOGGLED' && e.on && e.id !== ev.id));
+          if (bySelf) this.springPop(this.sprites.get(ev.id));
+          else this.pulse(this.sprites.get(ev.id));
           break;
+        }
         case 'NO_EFFECT':
           this.shake(this.sprites.get(ev.targetId));
           break;
@@ -247,6 +270,15 @@ export class GameScene extends Phaser.Scene {
   private pulse(img: Img | undefined, to = 1.25): void {
     if (!img || this.reduced) return;
     this.tweens.add({ targets: img, scale: { from: 1, to }, duration: 110, yoyo: true, ease: 'Quad.out' });
+  }
+  /** A spring switch letting go: it dips, then a ring fades out, so the change is seen as well as heard. */
+  private springPop(img: Img | undefined): void {
+    if (!img) return;
+    if (this.reduced) return;
+    this.tweens.add({ targets: img, scale: { from: 1, to: 0.8 }, duration: 90, yoyo: true, ease: 'Quad.out' });
+    const ring = this.add.circle(img.x, img.y, 26, C.discovery, 0).setStrokeStyle(4, C.discovery, 0.9).setDepth(9997);
+    this.board.add(ring);
+    this.tweens.add({ targets: ring, scale: 2, alpha: 0, duration: 420, ease: 'Cubic.out', onComplete: () => ring.destroy() });
   }
   private shake(img: Img | undefined): void {
     if (!img || this.reduced) return;
