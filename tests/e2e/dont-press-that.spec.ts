@@ -95,17 +95,16 @@ test.describe("DON'T PRESS THAT: controls and respawn", () => {
     test.skip(isMobile, 'keyboard');
     await open(page, 1);
     const s0 = await st(page);
+    // Hold the key until the world has moved, however many frames the browser managed (WebKit on a busy runner is slow to start).
     await page.keyboard.down('ArrowRight');
-    await page.waitForTimeout(500);
+    await expect.poll(async () => (await st(page)).x, { timeout: 5000 }).toBeGreaterThan(s0.x + 2);
     await page.keyboard.up('ArrowRight');
     const s1 = await st(page);
-    expect(s1.x).toBeGreaterThan(s0.x + 2);
     await page.keyboard.press('Space');
     await expect.poll(async () => (await st(page)).grounded).toBe(false);
     await page.keyboard.down('ArrowLeft');
-    await page.waitForTimeout(500);
+    await expect.poll(async () => (await st(page)).x, { timeout: 5000 }).toBeLessThan(s1.x - 0.5);
     await page.keyboard.up('ArrowLeft');
-    expect((await st(page)).x).toBeLessThan(s1.x);
     await page.keyboard.press('r');
     await expect.poll(async () => (await st(page)).x, { timeout: 3000 }).toBeCloseTo(s0.x, 0);
     // Space on a button must never press it: after using the settings button, Space still jumps
@@ -134,22 +133,20 @@ test.describe("DON'T PRESS THAT: controls and respawn", () => {
     test.skip(!isMobile, 'touch layout');
     await open(page, 1);
     await expect(page.getByTestId('dpt-pad')).toBeVisible();
-    const hold = async (id: string, ms: number): Promise<void> => {
+    /** Holds a button until `done` is true (or 5 s), so the check does not depend on how many frames the browser managed. */
+    const hold = async (id: string, done: () => Promise<boolean>): Promise<void> => {
       const b = (await page.getByTestId(id).boundingBox())!;
       await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
       await page.mouse.down();
-      await page.waitForTimeout(ms);
+      await expect.poll(done, { timeout: 5000 }).toBe(true);
       await page.mouse.up();
     };
     const x0 = (await st(page)).x;
-    await hold('dpt-right', 450);
+    await hold('dpt-right', async () => (await st(page)).x > x0 + 2);
     const x1 = (await st(page)).x;
-    expect(x1).toBeGreaterThan(x0 + 2);
-    await hold('dpt-left', 300);
-    expect((await st(page)).x).toBeLessThan(x1);
+    await hold('dpt-left', async () => (await st(page)).x < x1 - 0.5);
     const y0 = (await st(page)).y;
-    await hold('dpt-jump', 120);
-    await expect.poll(async () => (await st(page)).y).toBeLessThan(y0 - 0.5);
+    await hold('dpt-jump', async () => (await st(page)).y < y0 - 0.5);
     for (const id of ['dpt-left', 'dpt-right', 'dpt-jump', 'dpt-restart']) {
       const b = (await page.getByTestId(id).boundingBox())!;
       expect(b.width, id).toBeGreaterThanOrEqual(44);
@@ -254,9 +251,8 @@ test.describe("DON'T PRESS THAT: the host", () => {
     await expect(page.getByTestId('dpt-line')).toContainText('Host muted');
     expect((await st(page)).line).toBeNull();
     await page.keyboard.down('ArrowRight');
-    await page.waitForTimeout(300);
+    await expect.poll(async () => (await st(page)).x, { timeout: 5000 }).toBeGreaterThan(2);
     await page.keyboard.up('ArrowRight');
-    expect((await st(page)).x).toBeGreaterThan(2);
     const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('hva.dpt.v1') ?? '{}').settings);
     expect(saved).toMatchObject({ tone: 'chaos', muted: true });
     await page.reload();
