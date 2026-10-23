@@ -1,4 +1,5 @@
 import { CAMPAIGN_ORDER } from '@hva/game-core';
+import { dptProgress } from '../games/dont-press-that/storage';
 import { phProgress } from '../games/pattern-hunter/storage';
 import { completedCount } from '../save/save';
 import { store } from '../save/instance';
@@ -29,6 +30,14 @@ export const GAMES: readonly GameModule[] = [
     status: 'experimental',
     load: () => import('../games/pattern-hunter/PatternHunterGame').then((m) => ({ default: m.PatternHunterGame })),
     progress: phProgress,
+  },
+  {
+    id: 'dont-press-that',
+    name: "DON'T PRESS THAT",
+    tagline: 'A rage platformer with a smug AI host who predicts you will fail. Five levels. Prove him wrong.',
+    status: 'experimental',
+    load: () => import('../games/dont-press-that/DontPressThatGame').then((m) => ({ default: m.default })),
+    progress: dptProgress,
   },
   {
     id: 'detective',

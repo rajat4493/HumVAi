@@ -4,10 +4,11 @@ import { GAMES, gameById } from './registry';
 import { hashFor, parseHash } from './router';
 
 describe('the catalogue', () => {
-  it('lists The Experiment, Pattern Hunter and The Detective, in that order, with the right status', () => {
+  it("lists The Experiment, Pattern Hunter, DON'T PRESS THAT and The Detective, in that order, with the right status", () => {
     expect(GAMES.map((g) => [g.id, g.status])).toEqual([
       ['experiment', 'available'],
       ['pattern-hunter', 'experimental'],
+      ['dont-press-that', 'experimental'],
       ['detective', 'coming-soon'],
     ]);
   });

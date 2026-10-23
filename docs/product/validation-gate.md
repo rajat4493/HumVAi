@@ -24,3 +24,7 @@ Principle: learn whether people want more *before* building more, with the least
 
 ## Risks of this method
 Self-selected testers over-report enjoyment; manual file sending under-counts; Pages traffic counts include bots and the owner. The point is to catch gross failure early, not to prove demand.
+
+
+## Addendum: the third game (DON'T PRESS THAT)
+The decision rule above was written for a *third* game. One has been built as a **five-level vertical slice**, not as a commitment: it exists to find out whether a fast, funny, learnable rage platformer with a rival who makes checkable predictions is worth more levels. Its own gate, with thresholds fixed in advance, is `docs/games/dont-press-that/playtest-plan.md`: 10 to 15 external players, host on versus host muted, voluntary retries, perceived fairness, enjoyment, completion and willingness to challenge a friend. The slice does not satisfy this document's gate by being built; it satisfies it only if that test comes out well. No further levels, no fourth game and no monetisation until then.

@@ -53,6 +53,13 @@ try {
   // direct links under the sub-path: a game page and an unknown address
   await page.goto(`${base}#/pattern-hunter`);
   await page.getByTestId('ph-experimental').waitFor();
+  // the third game: its chunk loads under the sub-path, the level runs, a death respawns, and a deep link survives a reload
+  await page.goto(`${base}#/dont-press-that/play/1?unlock=all`);
+  await page.waitForFunction(() => '__DPT__' in window);
+  await page.evaluate(() => window.__DPT__.feed([8, ...Array(160).fill(2)])); // walk into the falling bar
+  await page.waitForFunction(() => window.__DPT__.state().respawnMs !== null, null, { timeout: 8000 }); // died, and control came back
+  await page.reload();
+  await page.waitForFunction(() => '__DPT__' in window);
   await page.goto(`${base}#/nowhere`);
   await page.reload();
   await page.getByTestId('play').waitFor();

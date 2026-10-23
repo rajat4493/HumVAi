@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 // Firefox and WebKit are not installed in the coding sandbox; CI installs them and runs a gameplay-focused subset (CROSS_BROWSER=1).
 const cross = process.env.CROSS_BROWSER === '1';
-const CROSS_TESTS = /(smoke|progress|campaign|a11y|finale|telemetry|audio|suite)\.spec/;
+const CROSS_TESTS = /(smoke|progress|campaign|a11y|finale|telemetry|audio|suite|dont-press-that)\.spec/;
 
 export default defineConfig({
   testDir: 'tests/e2e',

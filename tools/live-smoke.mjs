@@ -63,7 +63,21 @@ try {
     check(/available/i.test(await page.getByTestId('game-experiment').innerText()), `${tag} catalogue: The Experiment is Available`);
     check(/experimental prototype/i.test(await page.getByTestId('game-pattern-hunter').innerText()), `${tag} catalogue: Pattern Hunter is labelled an experimental prototype`);
     check(/coming soon/i.test(await page.getByTestId('game-detective').innerText()) && (await page.getByTestId('game-detective').getByRole('button').count()) === 0, `${tag} catalogue: The Detective is Coming soon with no Play button`);
+    check(/experimental prototype/i.test(await page.getByTestId('game-dont-press-that').innerText()), `${tag} catalogue: DON'T PRESS THAT is labelled an experimental prototype`);
     check(/no recorded AI attempts/i.test(await page.getByTestId('experiment-ai-note').innerText()), `${tag} home makes no AI claim without recordings`);
+    // DON'T PRESS THAT: the level list opens, level 1 runs, a death comes back within half a second, and the host's score is shown
+    await page.goto(`${url}#/dont-press-that`);
+    await page.getByTestId('dpt-play').waitFor();
+    await page.getByTestId('dpt-play').click();
+    await page.waitForFunction(() => '__DPT__' in window);
+    await page.evaluate(() => window.__DPT__.feed([8, ...Array(200).fill(2)]));
+    await page.waitForFunction(() => window.__DPT__.state().respawnMs !== null, null, { timeout: 8000 });
+    const dpt = await page.evaluate(() => window.__DPT__.state());
+    check(dpt.respawnMs !== null && dpt.respawnMs < 500, `${tag} DON'T PRESS THAT: after a death, control returned in ${dpt.respawnMs} ms (< 500)`);
+    check(/His predictions/i.test(await page.getByTestId('dpt-score').innerText()), `${tag} DON'T PRESS THAT: the host's prediction score is shown`);
+    await page.evaluate(() => localStorage.removeItem('hva.dpt.v1'));
+    await page.goto(url);
+    await page.getByTestId('play').waitFor();
     // Pattern Hunter, direct link, solved with the truthful answers
     await page.goto(`${url}#/pattern-hunter`);
     await page.getByTestId('ph-experimental').waitFor();

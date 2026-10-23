@@ -1,6 +1,6 @@
 # HUMANS vs AI
 
-A small browser arcade where people try to out-think AI. **The Experiment** (20 puzzle worlds about working out rules nobody explained) is the flagship; **Pattern Hunter** is an experimental one-puzzle prototype that proves a second game can be added; **The Detective** is a catalogue placeholder. In The Experiment: Each of the twenty worlds has hidden rules. You **Scout** (a free sandbox: experiment, reset, learn), then **Run** (the same world, fresh, with a strict action budget). The same budgets apply to an AI opponent.
+A small browser arcade where people try to out-think AI. **The Experiment** (20 puzzle worlds about working out rules nobody explained) is the flagship; **Pattern Hunter** is an experimental one-puzzle prototype that proves a second game can be added; **DON'T PRESS THAT** is an experimental five-level rage platformer with a smug AI host (a playable slice awaiting its first outside players); **The Detective** is a catalogue placeholder. In The Experiment: Each of the twenty worlds has hidden rules. You **Scout** (a free sandbox: experiment, reset, learn), then **Run** (the same world, fresh, with a strict action budget). The same budgets apply to an AI opponent.
 
 **Status:** all twenty worlds are built and verified by solver and browser tests. No person has played them yet, and **no real AI opponent exists yet**: no provider recordings have been made, so the game honestly says there is no recorded AI attempt. See `docs/RELEASE-QA.md` for exactly what is and is not verified.
 
@@ -16,7 +16,7 @@ npm run dev --workspace @hva/web   # http://localhost:5173
 ## How it is built
 - `packages/game-core`: the deterministic rules engine, the solver and the campaign table (pure TypeScript, no browser).
 - `packages/ai-adapters`, `apps/runner`: the AI runner (Anthropic and OpenAI over `fetch`, server-side only), independent replay verification, recorded-opponent format. Keys never reach the browser (lint rule plus a bundle scan).
-- `apps/web`: React + Phaser. `src/suite` is the arcade shell (hash router, game registry, home); `src/games/<game>` holds each game's own rules and screens (Pattern Hunter is fully self-contained); The Experiment's screens still live under `src/screens`. Saves are local to the device. Audio is synthesised at runtime. To add a game: a folder under `games/`, an entry in `suite/registry.ts`, and (if it records data) a vocabulary in `telemetry/schemas.ts`.
+- `apps/web`: React + Phaser. `src/suite` is the arcade shell (hash router, game registry, home); `src/games/<game>` holds each game's own rules and screens (Pattern Hunter and DON'T PRESS THAT are fully self-contained; the latter is a pure 60 Hz simulation in `sim.ts`, drawn to a 2D canvas, with its own host, predictions and save); The Experiment's screens still live under `src/screens`. Saves are local to the device. Audio is synthesised at runtime. To add a game: a folder under `games/`, an entry in `suite/registry.ts`, and (if it records data) a vocabulary in `telemetry/schemas.ts`.
 - `tests/e2e`: browser tests. `tools/`: level lab, fixtures, bundle scan, sub-path check.
 
 ## Controls
