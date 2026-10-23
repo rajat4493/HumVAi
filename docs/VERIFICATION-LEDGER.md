@@ -34,7 +34,7 @@ Last updated at repository commit: see `git log -1` of this file. Deployed site 
 | M2-4 | Neutral event envelope and local-only log; free text cannot enter; consent gates everything | 17 unit tests + e2e (consent off: nothing stored; on: valid ordered events; delete erases) | **Verified**; no pipeline exists |
 | M2-5 | Home claims no AI opponent without recordings | e2e + live-smoke | **Verified** |
 | M2-6 | `/HumVAi/` build, direct hash links | `verify:subpath` | **Verified** locally; **deploy not done** |
-| M2-7 | Suite on Firefox/WebKit/iPhone profile | `suite.spec` added to the CI subset | **Pending first CI run** |
+| M2-7 | Suite on Firefox/WebKit/iPhone profile | CI run 39945257059 on `a1b238d`: main job passed all 132 browser tests on GitHub; the sub-path check failed on a race (the home screen's best-effort `recordings/index.json` fetch was aborted by a navigation and flagged as a failed request), fixed in the next commit. The cross-browser job result is read after that run | **Chromium verified on CI; Firefox/WebKit pending** |
 
 ## Assumptions challenged
 - *"Mock tests show the AI runner works."* No: a real provider can differ in response shape, refusals, thinking tokens, latency and cost. Hence the one-attempt pilot with a cap. One thing already found without a key: the Anthropic API stopped accepting `temperature`/`top_p` on 2026-10-21; the adapter would have sent nothing by default, but now refuses them explicitly.

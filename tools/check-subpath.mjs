@@ -34,7 +34,8 @@ try {
   const page = await browser.newPage();
   page.on('pageerror', (e) => problems.push(`pageerror: ${e.message}`));
   page.on('console', (m) => m.type() === 'error' && !m.text().includes('recordings/index.json') && problems.push(`console: ${m.text()}`));
-  page.on('requestfailed', (r) => problems.push(`request failed: ${r.url()}`));
+  // recordings/index.json is a best-effort fetch (absent until real recordings exist); navigating away can abort it mid-flight
+  page.on('requestfailed', (r) => !r.url().endsWith('recordings/index.json') && problems.push(`request failed: ${r.url()}`));
   page.on('response', (r) => r.status() >= 400 && !r.url().endsWith('recordings/index.json') && problems.push(`HTTP ${r.status()}: ${r.url()}`));
 
   await page.goto(base);
