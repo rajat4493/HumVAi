@@ -1668,14 +1668,17 @@ input[type='range'] {
 }
 .game-card-top {
   display: flex;
+  flex-wrap: wrap; /* a long status label drops below the title instead of spilling into the next card */
   align-items: flex-start;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px 10px;
   width: 100%;
+  min-width: 0;
 }
 .game-card h3 {
   margin: 0;
   font-size: 1.25rem;
+  min-width: 0;
 }
 .game-card p {
   margin: 0;

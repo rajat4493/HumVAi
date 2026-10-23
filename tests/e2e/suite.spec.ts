@@ -72,6 +72,23 @@ test.describe('the arcade home', () => {
   });
 });
 
+test.describe('the catalogue layout', () => {
+  for (const width of [1600, 1450, 1280, 1100, 1000, 900, 768, 600, 390, 340]) {
+    test(`every status badge stays inside its own card at ${width}px wide`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/');
+      await expect(page.getByTestId('game-experiment')).toBeVisible();
+      for (const id of ['experiment', 'pattern-hunter', 'detective']) {
+        const card = await page.getByTestId(`game-${id}`).boundingBox();
+        const badge = await page.getByTestId(`game-${id}`).locator('.badge').boundingBox();
+        expect(card && badge, id).toBeTruthy();
+        expect(badge!.x, `${id} badge left edge`).toBeGreaterThanOrEqual(card!.x);
+        expect(badge!.x + badge!.width, `${id} badge right edge`).toBeLessThanOrEqual(card!.x + card!.width);
+      }
+    });
+  }
+});
+
 test.describe('navigation: links, refresh and Back', () => {
   test('home -> map -> world -> Back -> Back returns through the same screens', async ({ page }) => {
     await page.goto('/');
