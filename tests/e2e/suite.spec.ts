@@ -85,7 +85,10 @@ test.describe('navigation: links, refresh and Back', () => {
     // The map is a lazy chunk; a cold Firefox runner needs longer than the default 5 s to fetch it after a reload.
     const slow = { timeout: 20_000 };
     await page.goBack();
-    await expect(page.getByTestId('progress-summary')).toBeVisible(slow);
+    await expect(page.getByTestId('progress-summary'), `after Back the address is ${page.url()}`).toBeVisible(slow).catch(async (e) => {
+      const text = (await page.locator('body').innerText().catch(() => '(no body)')).slice(0, 300);
+      throw new Error(`${e.message}\nURL: ${page.url()}\nPage text: ${text}`);
+    });
     await page.goBack();
     await expect(page.getByTestId('play')).toBeVisible(slow);
     await page.goForward();

@@ -43,8 +43,16 @@ export function useRoute(): Route {
   const [route, setRoute] = useState(() => parseHash(window.location.hash));
   useEffect(() => {
     const on = () => setRoute(parseHash(window.location.hash));
+    // popstate and pageshow cover a history step or a back-forward-cache restore that some browsers do not report as a hashchange.
     window.addEventListener('hashchange', on);
-    return () => window.removeEventListener('hashchange', on);
+    window.addEventListener('popstate', on);
+    window.addEventListener('pageshow', on);
+    on();
+    return () => {
+      window.removeEventListener('hashchange', on);
+      window.removeEventListener('popstate', on);
+      window.removeEventListener('pageshow', on);
+    };
   }, []);
   return route;
 }
