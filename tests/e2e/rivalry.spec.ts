@@ -39,6 +39,7 @@ test('no AI numbers appear until the human run has ended (H5), then the reveal s
 test('H1: every element derived from an AI attempt sits in a data-source="recorded" container that shows a RECORDED badge', async ({ page, isMobile }) => {
   await page.goto(W1);
   await finish(page, WIN, !!isMobile);
+  await page.locator('[data-source="recorded"]').first().waitFor(); // the recording loads asynchronously; do not race it
   const report = await page.evaluate(() => {
     const sections = [...document.querySelectorAll('[data-source="recorded"]')];
     return sections.map((s) => ({ ok: !!(s.querySelector('[data-testid="recorded-badge"]') || s.closest('[data-source="recorded"]')?.querySelector('[data-testid="recorded-badge"]')), cls: s.className }));

@@ -29,6 +29,7 @@ export class TelemetryRecorder {
   private attempts: TAttempt[] = [];
   private current: { attempt: TAttempt; began: number } | null = null;
   private listeners = new Set<() => void>();
+  private clearHooks = new Set<() => void>();
   private consent: Consent | null;
 
   constructor(private readonly d: RecorderDeps) {
@@ -122,7 +123,13 @@ export class TelemetryRecorder {
   }
 
   /** Erases everything this recorder holds, here and in storage. Consent itself is left as it is. */
+  /** Lets other local stores that share this consent (the neutral event log) erase themselves when the player deletes or opts out. */
+  onClear(hook: () => void): void {
+    this.clearHooks.add(hook);
+  }
+
   clear(): void {
+    this.clearHooks.forEach((h) => h());
     this.attempts = [];
     this.current = null;
     try {
@@ -166,7 +173,8 @@ export class TelemetryRecorder {
       const raw = this.d.kv.getItem(CONSENT_KEY);
       if (!raw) return null;
       const v = JSON.parse(raw) as Partial<Consent>;
-      return typeof v.granted === 'boolean' && typeof v.at === 'string' && typeof v.policyVersion === 'string' ? (v as Consent) : null;
+      // Consent given under older wording does not carry over: the player is asked again when the wording changes.
+      return typeof v.granted === 'boolean' && typeof v.at === 'string' && v.policyVersion === POLICY_VERSION ? (v as Consent) : null;
     } catch {
       return null;
     }

@@ -1,6 +1,7 @@
 import type { ChallengeDefinition } from '@hva/game-core';
 import { checkOpponent } from '@hva/ai-adapters';
 import type { OpponentRecording } from '@hva/ai-adapters';
+import { baseUrl } from './base';
 
 export type OpponentState =
   | { kind: 'loading' }
@@ -15,7 +16,6 @@ interface Manifest {
   recordings: { challengeId: string; file: string }[];
 }
 
-const baseUrl = (): string => (typeof import.meta !== 'undefined' ? (import.meta.env.BASE_URL ?? '/') : '/');
 
 /**
  * Loads the static recording for a world and re-verifies it in the browser before it can be shown:
@@ -42,18 +42,5 @@ export async function loadOpponent(level: ChallengeDefinition, opts: { fixtures:
     return { kind: 'ready', rec };
   } catch {
     return { kind: 'none' };
-  }
-}
-
-/** How many worlds have a recorded model attempt available (0 until real recordings are published). Never throws. */
-export async function countRecordedWorlds(opts: { base?: string; fetchFn?: typeof fetch } = {}): Promise<number> {
-  const f = opts.fetchFn ?? fetch;
-  try {
-    const res = await f(`${opts.base ?? baseUrl()}recordings/index.json`);
-    if (!res.ok) return 0;
-    const manifest = (await res.json()) as Manifest;
-    return manifest.schema === 'hva.recordings.1' ? manifest.recordings.length : 0;
-  } catch {
-    return 0;
   }
 }

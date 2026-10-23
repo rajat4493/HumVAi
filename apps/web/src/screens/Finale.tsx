@@ -4,7 +4,7 @@ import { audio } from '../audio/instance';
 import { BackIcon } from '../components/icons';
 import { finaleShareText } from '../lib/share';
 import { optimalLength } from '../lib/solve';
-import { countRecordedWorlds } from '../opponent/load';
+import { countRecordedWorlds } from '../opponent/count';
 import { progressOf } from '../save/save';
 import type { SaveData } from '../save/types';
 

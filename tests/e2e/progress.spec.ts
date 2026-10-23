@@ -24,8 +24,7 @@ test('fresh start: only world 1 is open; winning it unlocks world 2, saves, and 
   await expect(page.getByTestId('node-w02-orange-switch')).toBeEnabled();
   await expect(page.getByTestId('node-w01-first-steps')).toContainText('Shortest possible');
 
-  await page.reload();
-  await page.getByTestId('play').click();
+  await page.reload(); // the URL is the screen now: a refresh stays on the map
   await expect(page.getByTestId('progress-summary')).toHaveText(`1 of ${CAMPAIGN_ORDER.length} worlds finished`);
   await page.getByTestId('hall-button').click();
   await expect(page.getByTestId('hall-count')).toHaveText('2 of 10 earned');
@@ -47,8 +46,7 @@ test('a run in progress survives a refresh and can be continued or abandoned', a
   await ready(page);
   expect(await state(page)).toMatchObject({ phase: 'explore', scout: { used: 3 }, player: { x: 3, y: 2 } });
 
-  await page.reload(); // lands on the map (dev URL); the saved run is still offered
-  await page.getByTestId('continue').click();
+  await page.reload(); // a refresh stays in the world; the saved run is still offered
   await page.getByRole('button', { name: 'Start over' }).click();
   await ready(page);
   expect(await state(page)).toMatchObject({ scout: { used: 0 }, player: { x: 1, y: 1 } });

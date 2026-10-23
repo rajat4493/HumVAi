@@ -4,7 +4,7 @@ import { BackIcon } from '../components/icons';
 import { Modal } from '../components/Modal';
 import { applyMotion } from '../lib/motion';
 import { withSettings } from '../save/save';
-import { telemetry, useTelemetry } from '../telemetry/instance';
+import { neutralExport, telemetry, useTelemetry } from '../telemetry/instance';
 import { POLICY_VERSION } from '../telemetry/types';
 import type { SaveStore } from '../save/store';
 import type { SaveData, Settings as SettingsData } from '../save/types';
@@ -54,15 +54,17 @@ export function Settings({ save, store, onBack }: Props) {
   };
   const blocks = manualBlocks(MANUAL);
   const t = useTelemetry();
-  const download = () => {
-    const blob = new Blob([JSON.stringify(telemetry.export(), null, 1)], { type: 'application/json' });
+  const saveFile = (data: unknown, name: string) => {
+    const blob = new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'humans-vs-ai-my-gameplay.json';
+    a.download = name;
     a.click();
     URL.revokeObjectURL(url);
   };
+  const download = () => saveFile(telemetry.export(), 'humans-vs-ai-my-gameplay.json');
+  const downloadNeutral = () => saveFile(neutralExport(), 'humans-vs-ai-my-events.json');
   return (
     <main className="panel-screen" aria-label="Settings">
       <header className="map-head">
@@ -142,7 +144,7 @@ export function Settings({ save, store, onBack }: Props) {
       <section className="panel" aria-labelledby="research-h" data-testid="research-panel">
         <h2 id="research-h">Help test the game (optional)</h2>
         <p className="note">
-          If you turn this on, the game keeps a record of how you play on <b>this device only</b>: the moves you make in Scout and Run, resets, hints, how each attempt ended, which version of each world you played, and roughly how long
+          If you turn this on, the arcade keeps a record of how you play on <b>this device only</b>: for The Experiment, the moves you make in Scout and Run, resets, hints and how each attempt ended; for other games, the tests and answers you give; plus which version of each puzzle you played and roughly how long
           things took. It does <b>not</b> record your name, location, device details or anything outside the game. Nothing is sent anywhere. You can download the file and send it to the people running the test if you choose, or delete it at any time.
           The game plays the same either way.
         </p>
@@ -153,13 +155,16 @@ export function Settings({ save, store, onBack }: Props) {
           testId="research-toggle"
         />
         <p className="note" data-testid="research-count">
-          {t.enabled ? `${t.count} attempt${t.count === 1 ? '' : 's'} saved on this device.` : 'Off. Nothing is being recorded.'} <small>(Policy wording: {POLICY_VERSION}, draft)</small>
+          {t.enabled ? `${t.count} attempt${t.count === 1 ? '' : 's'} saved on this device${t.events > 0 ? `, plus ${t.events} events from other games` : ''}.` : 'Off. Nothing is being recorded.'} <small>(Policy wording: {POLICY_VERSION}, draft)</small>
         </p>
         <div className="row">
           <button className="btn ghost" data-testid="research-download" disabled={!t.enabled || t.count === 0} onClick={download}>
             Download my gameplay file
           </button>
-          <button className="btn ghost" data-testid="research-delete" disabled={t.count === 0} onClick={() => telemetry.clear()}>
+          <button className="btn ghost" data-testid="research-download-events" disabled={!t.enabled || t.count + t.events === 0} onClick={downloadNeutral}>
+            Download as a game-neutral event file (experimental)
+          </button>
+          <button className="btn ghost" data-testid="research-delete" disabled={t.count + t.events === 0} onClick={() => telemetry.clear()}>
             Delete my saved gameplay
           </button>
         </div>

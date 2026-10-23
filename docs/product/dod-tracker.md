@@ -26,3 +26,5 @@ Status vocabulary: **Met** (evidence exists and was checked), **Partly** (some o
 | 20 | Engineering handover and evidence ledger complete | **Partly** | Ledger exists and is maintained; final handover at release |
 
 The game is **not declared production-ready**. Remaining v1.0 blockers: a verified real-AI recording (6), human playtests (3, 16), real-browser/device coverage (10, 14), and redeploy plus live smoke (18).
+
+**M2 note:** the arcade shell and a second-game prototype were added without changing any of the above gates. They do not make the unmet gates (real AI recording, human playtests, real devices) easier; see `docs/M2-HANDOVER.md`.

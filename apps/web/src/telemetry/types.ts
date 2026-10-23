@@ -2,7 +2,7 @@ import type { GameAction } from '@hva/game-core';
 
 export const TELEMETRY_SCHEMA = 'hva.telemetry.1';
 /** Bumped whenever the data policy text changes, so consent is always recorded against the wording the player saw. */
-export const POLICY_VERSION = 'draft-1';
+export const POLICY_VERSION = 'draft-2';
 export const STORE_KEY = 'hva.telemetry.v1';
 export const CONSENT_KEY = 'hva.telemetry.consent.v1';
 

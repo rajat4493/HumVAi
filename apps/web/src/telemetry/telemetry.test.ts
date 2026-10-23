@@ -67,7 +67,16 @@ describe('consent: off by default, and off means nothing at all', () => {
     const again = make(kv).rec;
     expect(again.enabled).toBe(true);
     expect(again.count).toBe(1);
-    expect(JSON.parse(kv.data.get(CONSENT_KEY) as string)).toEqual({ granted: true, at: '2026-10-22', policyVersion: 'draft-1' });
+    expect(JSON.parse(kv.data.get(CONSENT_KEY) as string)).toEqual({ granted: true, at: '2026-10-22', policyVersion: 'draft-2' });
+  });
+
+  it('consent given under older wording is not honoured: the player is asked again, and nothing is recorded meanwhile', () => {
+    const kv = memory();
+    kv.setItem(CONSENT_KEY, JSON.stringify({ granted: true, at: '2026-01-01', policyVersion: 'draft-1' }));
+    const { rec } = make(kv);
+    expect(rec.enabled).toBe(false);
+    play(rec, 'w01-first-steps', optimal('w01-first-steps'));
+    expect(rec.count).toBe(0);
   });
 
   it('delete removes the saved attempts but keeps the choice', () => {

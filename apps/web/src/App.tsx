@@ -1,109 +1,59 @@
-import { Suspense, lazy, useEffect, useState } from 'react';
-import { CAMPAIGN_ORDER, LEVELS, levelById } from '@hva/game-core';
+import { Suspense, lazy, useEffect, useMemo } from 'react';
+import type { ComponentType } from 'react';
 import { applyMotion } from './lib/motion';
-import { completedCount, isUnlocked } from './save/save';
 import { store, useSave } from './save/instance';
-import { Finale } from './screens/Finale';
-import { Hall } from './screens/Hall';
 import { Settings } from './screens/Settings';
-import { Welcome } from './screens/Welcome';
-import { WorldMap } from './screens/WorldMap';
-
-// The game board (Phaser, ~330 KB gzipped) loads only when a world is opened, so the title and map are quick.
-const Arena = lazy(() => import('./screens/Arena').then((m) => ({ default: m.Arena })));
-
-type Screen = { name: 'welcome' } | { name: 'map' } | { name: 'settings'; from: 'welcome' | 'map' } | { name: 'hall'; from: 'welcome' | 'map' } | { name: 'finale' } | { name: 'play'; levelId: string };
+import type { GameProps } from './suite/contract';
+import { Home } from './suite/Home';
+import { gameById } from './suite/registry';
+import { go, hashFor, useRoute } from './suite/router';
 
 /**
- * Screens: Welcome -> World map -> Briefing/Arena/Result, plus Settings and the Hall of Humanity.
- * Developer switches (screenshots, tests): ?screen=arena&level=N|level-id&briefing=0, ?unlock=all
+ * The arcade shell. The URL decides what is on screen: #/ (home), #/settings, #/<game>/... (a game owns everything after
+ * its id). Each game is a lazy chunk, so the home screen never pays for a game it is not showing. Old developer links such
+ * as /?screen=arena&level=3 (no hash) open The Experiment directly.
  */
 export function App() {
-  const params = new URLSearchParams(window.location.search);
   const save = useSave();
-  const unlockAll = params.get('unlock') === 'all';
-  const levelParam = params.get('level') ?? '1';
-  const devLevel = CAMPAIGN_ORDER.includes(levelParam) ? levelParam : CAMPAIGN_ORDER[Math.min(Math.max(Number(levelParam) || 1, 1), LEVELS.length) - 1];
-  const [screen, setScreen] = useState<Screen>(() => {
-    if (params.get('screen') === 'arena' && devLevel) return { name: 'play', levelId: devLevel };
-    if (params.get('screen') === 'map') return { name: 'map' };
-    if (params.get('screen') === 'finale') return { name: 'finale' };
-    return { name: 'welcome' };
-  });
-
+  const route = useRoute();
   useEffect(() => {
     applyMotion(save.settings.motion);
   }, [save.settings.motion]);
 
-  const session = store.getSession();
-  const resumeId = session && levelById(session.levelId)?.version === session.levelVersion ? session.levelId : null;
+  const legacyDeepLink = route.game === null && route.rest.length === 0 && new URLSearchParams(window.location.search).has('screen');
+  const game = legacyDeepLink ? gameById('experiment') : gameById(route.game);
+  const playable = game?.load ? game : undefined;
+  const onHome = () => go(hashFor(null));
+
+  // One lazy component per game, created once.
+  const Lazy = useMemo(() => {
+    const cache = new Map<string, ComponentType<GameProps>>();
+    return (id: string, load: NonNullable<typeof playable>['load']) => {
+      if (!cache.has(id)) cache.set(id, lazy(load as NonNullable<typeof load>));
+      return cache.get(id) as ComponentType<GameProps>;
+    };
+  }, []);
+
+  useEffect(() => {
+    document.title = playable ? `${playable.name} · Humans vs AI` : route.game === 'settings' ? 'Settings · Humans vs AI' : 'Humans vs AI';
+  }, [playable, route.game]);
 
   let view;
-  switch (screen.name) {
-    case 'welcome':
-      view = (
-        <Welcome
-          hasProgress={completedCount(save) > 0 || resumeId !== null}
-          persistent={store.persistent}
-          onPlay={() => setScreen({ name: 'map' })}
-          onSettings={() => setScreen({ name: 'settings', from: 'welcome' })}
-          onHall={() => setScreen({ name: 'hall', from: 'welcome' })}
-        />
-      );
-      break;
-    case 'map':
-      view = (
-        <WorldMap
-          save={save}
-          unlockAll={unlockAll}
-          hasSession={resumeId}
-          onPlay={(levelId) => setScreen({ name: 'play', levelId })}
-          onBack={() => setScreen({ name: 'welcome' })}
-          onSettings={() => setScreen({ name: 'settings', from: 'map' })}
-          onHall={() => setScreen({ name: 'hall', from: 'map' })}
-          onFinale={() => setScreen({ name: 'finale' })}
-        />
-      );
-      break;
-    case 'finale':
-      view = <Finale save={save} onMap={() => setScreen({ name: 'map' })} onHall={() => setScreen({ name: 'hall', from: 'map' })} />;
-      break;
-    case 'settings':
-      view = <Settings save={save} store={store} onBack={() => setScreen(screen.from === 'map' ? { name: 'map' } : { name: 'welcome' })} />;
-      break;
-    case 'hall':
-      view = <Hall save={save} onBack={() => setScreen(screen.from === 'map' ? { name: 'map' } : { name: 'welcome' })} />;
-      break;
-    case 'play': {
-      const challenge = levelById(screen.levelId);
-      if (!challenge || !isUnlocked(save, challenge.id, { unlockAll })) {
-        view = <WorldMap save={save} unlockAll={unlockAll} hasSession={null} onPlay={(levelId) => setScreen({ name: 'play', levelId })} onBack={() => setScreen({ name: 'welcome' })} onSettings={() => setScreen({ name: 'settings', from: 'map' })} onHall={() => setScreen({ name: 'hall', from: 'map' })} />;
-        break;
-      }
-      const i = CAMPAIGN_ORDER.indexOf(challenge.id);
-      const nextId = CAMPAIGN_ORDER[i + 1];
-      view = (
-        <Arena
-          key={challenge.id}
-          challenge={challenge}
-          index={i}
-          total={CAMPAIGN_ORDER.length}
-          store={store}
-          skipBriefing={params.get('briefing') === '0'}
-          onMap={() => setScreen({ name: 'map' })}
-          onNext={nextId ? () => setScreen({ name: 'play', levelId: nextId }) : null}
-          onFinish={() => setScreen({ name: 'finale' })}
-        />
-      );
-      break;
-    }
+  if (playable) {
+    const G = Lazy(playable.id, playable.load);
+    view = <G route={legacyDeepLink ? [] : route.rest} query={route.query} onHome={onHome} />;
+  } else if (route.game === 'settings') {
+    view = <Settings save={save} store={store} onBack={onHome} />;
+  } else {
+    view = <Home />;
   }
+
   return (
     <div className="stage">
       <Suspense
         fallback={
           <div className="loading" role="status">
-            Loading the world…
+            Loading…
           </div>
         }
       >

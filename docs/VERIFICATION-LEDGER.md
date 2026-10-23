@@ -2,7 +2,7 @@
 
 One row per claim the project makes. **Verified** = a check was run and its result is recorded here. Anything not in this table is not claimed. Update on every milestone; never upgrade a row without the evidence.
 
-Last updated at repository commit: see `git log -1` of this file. Deployed site (owner-run, GitHub Pages): built from `a6af111`; the Space/Hints fix `2da6eb3` and everything after it is **not yet deployed**.
+Last updated at repository commit: see `git log -1` of this file. Deployed site (owner-run, GitHub Pages): built from `a6af111` (before M2); the Space/Hints fix `2da6eb3` and everything after it is **not yet deployed**.
 
 | # | Claim | Evidence | Status |
 |---|---|---|---|
@@ -27,6 +27,14 @@ Last updated at repository commit: see `git log -1` of this file. Deployed site 
 | B1 | Works in Firefox and Safari (WebKit) | CI job `cross-browser` on `97b7fc6`: 131 of 133 gameplay tests passed across Firefox, WebKit and an iPhone 13 profile, including winning all 20 worlds by touch in WebKit. Two failures: (1) **real bug**: on short phone screens (WebKit iPhone profile is 664 px tall) tall boards shrank to 32 px tiles and spilled out of their frame; fixed by compacting the phone header and hiding the two side cards below 720 px height (40 px tiles; tested at 780 and 664 px); (2) Firefox axe contrast reading on the replay panel, most likely mid fade-in; test now waits for the animation | **Verified on CI**: the re-run on `ce85acb` passed the whole gameplay subset in Firefox, WebKit and the iPhone profile (run 39866878465). Real devices and real Safari on iOS (audio unlock, touch feel) still **not verified** |
 | B2 | Works on real phones and tablets | none | **Not verified** (no devices) |
 | H1 | Human playtests completed | none; protocol in `docs/qa/PLAYTEST-PROTOCOL.md`, analyser in `tools/analyze-playtest.ts` | **Not done** |
+
+| M2-1 | Arcade home, catalogue, hash routing (Back, refresh, deep links, unknown addresses) | `suite.spec.ts`, `suite.test.ts` | **Verified** (Chromium desktop + phone emulation) |
+| M2-2 | Existing saves untouched by the suite | e2e byte comparison of `hva.save.v1`; no key or shape changed; zero diff in `packages/` and `apps/runner` | **Verified** |
+| M2-3 | Pattern Hunter prototype: independent, deterministic, results re-derived, own storage | 11 engine tests incl. "imports nothing from the Experiment"; e2e; a11y scan | **Verified** (it is a one-puzzle prototype, labelled experimental) |
+| M2-4 | Neutral event envelope and local-only log; free text cannot enter; consent gates everything | 17 unit tests + e2e (consent off: nothing stored; on: valid ordered events; delete erases) | **Verified**; no pipeline exists |
+| M2-5 | Home claims no AI opponent without recordings | e2e + live-smoke | **Verified** |
+| M2-6 | `/HumVAi/` build, direct hash links | `verify:subpath` | **Verified** locally; **deploy not done** |
+| M2-7 | Suite on Firefox/WebKit/iPhone profile | `suite.spec` added to the CI subset | **Pending first CI run** |
 
 ## Assumptions challenged
 - *"Mock tests show the AI runner works."* No: a real provider can differ in response shape, refusals, thinking tokens, latency and cost. Hence the one-attempt pilot with a cap. One thing already found without a key: the Anthropic API stopped accepting `temperature`/`top_p` on 2026-10-21; the adapter would have sent nothing by default, but now refuses them explicitly.

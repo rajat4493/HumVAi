@@ -59,6 +59,24 @@ try {
     await page.getByTestId('play').waitFor({ timeout: 15000 });
     check((await page.title()).includes('Humans vs AI'), `${tag} title screen shows the game title`);
 
+    // 1b. the arcade home and catalogue
+    check(/available/i.test(await page.getByTestId('game-experiment').innerText()), `${tag} catalogue: The Experiment is Available`);
+    check(/experimental prototype/i.test(await page.getByTestId('game-pattern-hunter').innerText()), `${tag} catalogue: Pattern Hunter is labelled an experimental prototype`);
+    check(/coming soon/i.test(await page.getByTestId('game-detective').innerText()) && (await page.getByTestId('game-detective').getByRole('button').count()) === 0, `${tag} catalogue: The Detective is Coming soon with no Play button`);
+    check(/no recorded AI attempts/i.test(await page.getByTestId('experiment-ai-note').innerText()), `${tag} home makes no AI claim without recordings`);
+    // Pattern Hunter, direct link, solved with the truthful answers
+    await page.goto(`${url}#/pattern-hunter`);
+    await page.getByTestId('ph-experimental').waitFor();
+    for (const n of [7, 20, 16]) await page.getByTestId(`ph-n-${n}`).click();
+    await page.getByTestId('ph-ready').click();
+    for (const [n, yes] of [[7, 'no'], [20, 'no'], [15, 'yes'], [38, 'no'], [9, 'no'], [27, 'yes']]) await page.getByTestId(`ph-say-${n}-${yes}`).click();
+    await page.getByTestId('ph-submit').click();
+    check((await page.getByTestId('ph-result').innerText()).includes('You found the rule'), `${tag} Pattern Hunter prototype is playable from a direct link`);
+    await page.goto(url);
+    await page.evaluate(() => localStorage.removeItem('hva.ph.v1'));
+    await page.reload();
+    await page.getByTestId('play').waitFor();
+
     // 3a. World 1 + progression
     await page.getByTestId('play').click();
     check((await page.getByTestId('progress-summary').innerText()).startsWith(`0 of ${WORLDS}`), `${tag} fresh map says 0 of ${WORLDS} worlds finished`);
@@ -97,6 +115,7 @@ try {
     // 3d. campaign ending (World 20 played for real from a seeded save of the other 19)
     await page.goto(url);
     await page.getByTestId('play').click();
+    await page.getByTestId('progress-summary').waitFor(); // the map is a lazy chunk now
     const worldIds = await page.evaluate(() => [...document.querySelectorAll('[data-testid^="node-"]')].map((n) => n.getAttribute('data-testid').slice(5)));
     check(worldIds.length === WORLDS, `${tag} map lists ${WORLDS} worlds`, String(worldIds.length));
     const last = 'w20-the-last-experiment';

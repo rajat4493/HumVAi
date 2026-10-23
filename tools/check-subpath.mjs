@@ -38,6 +38,7 @@ try {
   page.on('response', (r) => r.status() >= 400 && !r.url().endsWith('recordings/index.json') && problems.push(`HTTP ${r.status()}: ${r.url()}`));
 
   await page.goto(base);
+  await page.getByTestId('game-pattern-hunter').waitFor();
   await page.getByTestId('play').click();
   await page.getByTestId('node-w01-first-steps').click();
   await page.getByTestId('begin').click();
@@ -48,6 +49,12 @@ try {
   if (/live|thinking/i.test(text)) problems.push(`reveal text claims live play: ${text}`);
   const providerCalls = await page.evaluate(() => performance.getEntriesByType('resource').map((e) => e.name).filter((n) => /anthropic|openai/i.test(n)));
   if (providerCalls.length) problems.push(`browser contacted an AI provider: ${providerCalls.join(', ')}`);
+  // direct links under the sub-path: a game page and an unknown address
+  await page.goto(`${base}#/pattern-hunter`);
+  await page.getByTestId('ph-experimental').waitFor();
+  await page.goto(`${base}#/nowhere`);
+  await page.reload();
+  await page.getByTestId('play').waitFor();
 } finally {
   await browser.close();
   server.close();

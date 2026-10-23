@@ -122,3 +122,19 @@ test('Space still plays after a dialog closes and focus returns to its header bu
   await page.keyboard.press('Enter');
   await expect(page.getByRole('dialog', { name: 'Hints' })).toBeVisible();
 });
+
+test('Pattern Hunter (prototype) has no serious or critical violations in any of its states', async ({ page }) => {
+  await page.goto('/#/pattern-hunter');
+  await scan(page, 'pattern hunter: exploring');
+  await page.getByTestId('ph-n-7').click();
+  await page.getByTestId('ph-ready').click();
+  await scan(page, 'pattern hunter: predicting');
+  for (const n of [7, 20, 15, 38, 9, 27]) await page.getByTestId(`ph-say-${n}-yes`).click();
+  await page.getByTestId('ph-submit').click();
+  await page.waitForTimeout(500);
+  await scan(page, 'pattern hunter: result');
+  // it is operable from the keyboard
+  await page.getByTestId('ph-again').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('ph-probes-left')).toContainText('6 tests left');
+});
