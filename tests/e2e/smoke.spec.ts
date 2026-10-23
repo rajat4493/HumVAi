@@ -104,6 +104,7 @@ test('holding a key does not burn budget', async ({ page, isMobile }) => {
 });
 
 test('layout has no horizontal scroll and the board is large enough on every world', async ({ page, isMobile }) => {
+  test.setTimeout(240_000); // 20 worlds x two phone heights, each a full page load; WebKit on a CI runner needs about a minute for one pass
   // Phones are checked at a roomy height and at a short one (a browser's toolbars take height; WebKit's iPhone profile is 664 px tall).
   const sizes = isMobile ? [{ width: 390, height: 780, min: 36 }, { width: 390, height: 664, min: 34 }] : [{ width: 0, height: 0, min: 36 }];
   for (const size of sizes) {

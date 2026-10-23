@@ -82,12 +82,14 @@ test.describe('navigation: links, refresh and Back', () => {
     await expect(page.getByTestId('begin')).toBeVisible();
     await page.reload();
     await expect(page.getByTestId('begin')).toBeVisible(); // refresh stays in the world
+    // The map is a lazy chunk; a cold Firefox runner needs longer than the default 5 s to fetch it after a reload.
+    const slow = { timeout: 20_000 };
     await page.goBack();
-    await expect(page.getByTestId('progress-summary')).toBeVisible();
+    await expect(page.getByTestId('progress-summary')).toBeVisible(slow);
     await page.goBack();
-    await expect(page.getByTestId('play')).toBeVisible();
+    await expect(page.getByTestId('play')).toBeVisible(slow);
     await page.goForward();
-    await expect(page.getByTestId('progress-summary')).toBeVisible();
+    await expect(page.getByTestId('progress-summary')).toBeVisible(slow);
   });
 
   test('direct links work: a world, the map, settings, an unknown address, a locked world', async ({ page }) => {
