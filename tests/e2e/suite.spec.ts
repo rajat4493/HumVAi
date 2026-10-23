@@ -72,6 +72,33 @@ test.describe('the arcade home', () => {
   });
 });
 
+test.describe('keyboard scrolling', () => {
+  // Found in the first playtest: Pattern Hunter's page did not scroll with the arrow keys (only Tab moved it).
+  const screens: Array<[string, string]> = [
+    ['arcade home', '/#/'],
+    ['Pattern Hunter', '/#/pattern-hunter'],
+    ['world map', '/#/experiment/map'],
+    ['settings', '/#/settings'],
+    ['Hall of Humanity', '/#/experiment/hall'],
+  ];
+  for (const [name, url] of screens) {
+    test(`${name}: arrow keys and Page Down scroll it without pressing Tab first`, async ({ page }) => {
+      await page.setViewportSize({ width: 900, height: 420 });
+      await page.goto(url);
+      const main = page.locator('main').first();
+      await expect(main).toBeVisible();
+      await expect(main).toBeFocused();
+      const room = await main.evaluate((m) => m.scrollHeight - m.clientHeight);
+      test.skip(room < 120, 'this screen fits without scrolling at this size');
+      await page.keyboard.press('ArrowDown');
+      await expect.poll(() => main.evaluate((m) => m.scrollTop)).toBeGreaterThan(0);
+      const after = await main.evaluate((m) => m.scrollTop);
+      await page.keyboard.press('PageDown');
+      await expect.poll(() => main.evaluate((m) => m.scrollTop)).toBeGreaterThan(after);
+    });
+  }
+});
+
 test.describe('the catalogue layout', () => {
   for (const width of [1600, 1450, 1280, 1100, 1000, 900, 768, 600, 390, 340]) {
     test(`every status badge stays inside its own card at ${width}px wide`, async ({ page }) => {

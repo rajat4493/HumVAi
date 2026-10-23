@@ -6,6 +6,7 @@ import type { GameModule, GameStatus } from './contract';
 import { isPlayable } from './contract';
 import { GAMES, gameById } from './registry';
 import { go, hashFor } from './router';
+import { ScrollMain } from '../components/ScrollMain';
 
 const STATUS_LABEL: Record<GameStatus, string> = { available: 'Available', experimental: 'Experimental prototype', 'coming-soon': 'Coming soon' };
 
@@ -62,7 +63,7 @@ export function Home() {
   void save;
 
   return (
-    <main className="home" aria-label="Humans vs AI">
+    <ScrollMain className="home" aria-label="Humans vs AI">
       <div className="home-hero">
         <h1 className="logo display">
           <span className="human-t">HUMANS</span>
@@ -96,6 +97,6 @@ export function Home() {
         </button>
       </div>
       <p className="home-sub">{store.persistent ? 'Progress is saved on this device only.' : 'This browser mode cannot save progress.'}</p>
-    </main>
+    </ScrollMain>
   );
 }

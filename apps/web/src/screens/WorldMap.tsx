@@ -3,6 +3,7 @@ import { BackIcon, CheckIcon, GearIcon, LockIcon, StarIcon, TrophyIcon } from '.
 import { optimalLength } from '../lib/solve';
 import { completedCount, isUnlocked, progressOf } from '../save/save';
 import type { SaveData } from '../save/types';
+import { ScrollMain } from '../components/ScrollMain';
 
 interface Props {
   save: SaveData;
@@ -19,7 +20,7 @@ export function WorldMap({ save, unlockAll, hasSession, onPlay, onBack, onSettin
   const done = completedCount(save);
   const next = CAMPAIGN_ORDER.find((id) => isUnlocked(save, id, { unlockAll }) && !progressOf(save, id).completed) ?? null;
   return (
-    <main className="map" aria-label="World map">
+    <ScrollMain className="map" aria-label="World map">
       <header className="map-head">
         <button className="icon-btn" aria-label="Back to the title screen" onClick={onBack}>
           <BackIcon />
@@ -95,6 +96,6 @@ export function WorldMap({ save, unlockAll, hasSession, onPlay, onBack, onSettin
         ))}
       </div>
       <p className="map-foot">Progress is saved on this device only.</p>
-    </main>
+    </ScrollMain>
   );
 }

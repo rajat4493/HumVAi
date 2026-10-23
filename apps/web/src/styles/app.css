@@ -30,6 +30,9 @@ body {
     radial-gradient(600px 400px at 50% 50%, rgb(183 140 255 / 0.1), transparent 70%),
     linear-gradient(180deg, var(--midnight-2), var(--midnight));
 }
+main[tabindex='-1']:focus {
+  outline: none; /* focus is placed on the screen so the keys scroll it; there is nothing to outline */
+}
 .stage::before {
   /* faint star field */
   content: '';
@@ -1474,6 +1477,9 @@ input[type='range'] {
 
 /* ---------- campaign finale ---------- */
 .finale {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   position: relative;
   max-width: 760px;
   margin: 0 auto;
@@ -1612,6 +1618,8 @@ input[type='range'] {
 /* ---------- the arcade home ---------- */
 .home {
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   max-width: 1040px;
   width: 100%;
   margin: 0 auto;
@@ -1725,6 +1733,8 @@ input[type='range'] {
 /* ---------- Pattern Hunter (experimental prototype) ---------- */
 .ph {
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   max-width: 760px;
   width: 100%;
   margin: 0 auto;

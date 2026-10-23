@@ -1,11 +1,12 @@
 import { ALL_ACHIEVEMENTS, levelById } from '@hva/game-core';
 import { BackIcon } from '../components/icons';
 import type { SaveData } from '../save/types';
+import { ScrollMain } from '../components/ScrollMain';
 
 export function Hall({ save, onBack }: { save: SaveData; onBack: () => void }) {
   const earned = ALL_ACHIEVEMENTS.filter((a) => save.achievements[a.id]).length;
   return (
-    <main className="panel-screen" aria-label="Hall of Humanity">
+    <ScrollMain className="panel-screen" aria-label="Hall of Humanity">
       <header className="map-head">
         <button className="icon-btn" aria-label="Back" onClick={onBack} data-testid="hall-back">
           <BackIcon />
@@ -37,6 +38,6 @@ export function Hall({ save, onBack }: { save: SaveData; onBack: () => void }) {
           );
         })}
       </ul>
-    </main>
+    </ScrollMain>
   );
 }

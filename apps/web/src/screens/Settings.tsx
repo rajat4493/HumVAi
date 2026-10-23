@@ -8,6 +8,7 @@ import { neutralExport, telemetry, useTelemetry } from '../telemetry/instance';
 import { POLICY_VERSION } from '../telemetry/types';
 import type { SaveStore } from '../save/store';
 import type { SaveData, Settings as SettingsData } from '../save/types';
+import { ScrollMain } from '../components/ScrollMain';
 
 interface Props {
   save: SaveData;
@@ -66,7 +67,7 @@ export function Settings({ save, store, onBack }: Props) {
   const download = () => saveFile(telemetry.export(), 'humans-vs-ai-my-gameplay.json');
   const downloadNeutral = () => saveFile(neutralExport(), 'humans-vs-ai-my-events.json');
   return (
-    <main className="panel-screen" aria-label="Settings">
+    <ScrollMain className="panel-screen" aria-label="Settings">
       <header className="map-head">
         <button className="icon-btn" aria-label="Back" onClick={onBack} data-testid="settings-back">
           <BackIcon />
@@ -193,6 +194,6 @@ export function Settings({ save, store, onBack }: Props) {
           </div>
         </Modal>
       )}
-    </main>
+    </ScrollMain>
   );
 }

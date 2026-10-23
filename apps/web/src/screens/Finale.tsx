@@ -7,6 +7,7 @@ import { optimalLength } from '../lib/solve';
 import { countRecordedWorlds } from '../opponent/count';
 import { progressOf } from '../save/save';
 import type { SaveData } from '../save/types';
+import { ScrollMain } from '../components/ScrollMain';
 
 interface Props {
   save: SaveData;
@@ -56,7 +57,7 @@ export function Finale({ save, onMap, onHall }: Props) {
   };
 
   return (
-    <main className="finale" aria-label="The experiment is complete">
+    <ScrollMain className="finale" aria-label="The experiment is complete">
       <div className="finale-glow" aria-hidden="true" />
       <header className="map-head">
         <button className="icon-btn" aria-label="Back to the world map" onClick={onMap}>
@@ -117,6 +118,6 @@ export function Finale({ save, onMap, onHall }: Props) {
           Back to the worlds
         </button>
       </div>
-    </main>
+    </ScrollMain>
   );
 }

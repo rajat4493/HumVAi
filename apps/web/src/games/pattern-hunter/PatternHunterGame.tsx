@@ -6,6 +6,7 @@ import type { PhChallenge, PhRun } from './engine';
 import { emitPh } from './events';
 import { loadPh, recordPhResult } from './storage';
 import type { PhChallengeRecord } from './storage';
+import { ScrollMain } from '../../components/ScrollMain';
 
 /** The whole game is one screen: look at the examples, test some numbers, predict six more. */
 export function PatternHunterGame({ onHome }: GameProps) {
@@ -62,7 +63,7 @@ export function PatternHunterGame({ onHome }: GameProps) {
 
   const result = run.result;
   return (
-    <main className="ph" aria-label="Pattern Hunter prototype">
+    <ScrollMain className="ph" aria-label="Pattern Hunter prototype">
       <header className="map-head">
         <button className="icon-btn" aria-label="Back to the arcade" onClick={onHome} data-testid="ph-home">
           <BackIcon />
@@ -187,6 +188,6 @@ export function PatternHunterGame({ onHome }: GameProps) {
           {record.fewestProbes !== null ? `, solved in as few as ${record.fewestProbes} test${record.fewestProbes === 1 ? '' : 's'}` : ''}.
         </p>
       )}
-    </main>
+    </ScrollMain>
   );
 }
