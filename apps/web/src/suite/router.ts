@@ -42,12 +42,17 @@ export function go(hash: string, opts: { replace?: boolean } = {}): void {
 export function useRoute(): Route {
   const [route, setRoute] = useState(() => parseHash(window.location.hash));
   useEffect(() => {
-    const on = () => setRoute(parseHash(window.location.hash));
+    let last = window.location.hash;
+    // Only a real change makes a new route object, so a repeated event never re-renders (or restarts) the screen.
+    const on = () => {
+      if (window.location.hash === last) return;
+      last = window.location.hash;
+      setRoute(parseHash(last));
+    };
     // popstate and pageshow cover a history step or a back-forward-cache restore that some browsers do not report as a hashchange.
     window.addEventListener('hashchange', on);
     window.addEventListener('popstate', on);
     window.addEventListener('pageshow', on);
-    on();
     return () => {
       window.removeEventListener('hashchange', on);
       window.removeEventListener('popstate', on);
