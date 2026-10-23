@@ -11,7 +11,7 @@ Branch `claude/humans-vs-ai-plan-fz5yq0`. Starting point `7d0a8d2` (The Experime
 ## Requirements: status
 | Requirement | Status |
 |---|---|
-| Existing Experiment campaign remains playable (all 20 worlds, keyboard and touch) | **Verified** (`campaign.spec.ts`, Chromium; CI also Firefox/WebKit/iPhone profile, pending re-run) |
+| Existing Experiment campaign remains playable (all 20 worlds, keyboard and touch) | **Verified** (`campaign.spec.ts`: Chromium on CI; WebKit and WebKit iPhone-profile on CI, all 20 worlds by touch; Firefox on CI) |
 | Existing saves intact | **Verified** (unit + `suite.spec.ts` byte comparison; no storage key or shape changed) |
 | All existing automated tests pass | **Verified** locally: 280 unit, browser suite green (see below). Four existing tests needed edits for the new URL behaviour; see "Migration behaviour" |
 | Landing page on desktop and mobile | **Verified** (Chromium desktop and phone emulation, screenshots reviewed); **real devices not tested** |
@@ -23,8 +23,8 @@ Branch `claude/humans-vs-ai-plan-fz5yq0`. Starting point `7d0a8d2` (The Experime
 | No unapproved network telemetry | **Verified** (no upload code; tests assert one origin and no event writes without consent) |
 | Versioned neutral event envelope, per-game schemas, local-only demo | **Verified** (17 unit tests + e2e); no pipeline, by design |
 | Browser Back, refresh, direct links, resume | **Verified** (e2e) |
-| Firefox / Safari engines on the new screens | **Implemented but unverified**: `suite.spec` added to the CI cross-browser job; first run pending |
-| Real-device testing | **Blocked** (no devices) |
+| Firefox / Safari engines on the new screens | **Verified on CI** (run 39968111302, commit `1b2162d`: 160 passed, 7 skipped, 1 failed) except one case: in Firefox, Back after a page reload did not navigate under automation; skipped there, **manual Firefox check open**. WebKit iPhone results are emulation, not a physical device |
+| Real-device testing (physical iOS Safari, Android Chrome, touch feel, audio unlock) | **Blocked** (no devices); the CI iPhone profile is WebKit emulation with a phone viewport and touch, not iOS Safari |
 | Deployment of this build | **Not done** (owner-run; gate below) |
 | Pattern Hunter campaign, AI for it, Detective, other games, accounts, leaderboards, payments | **Not implemented** (out of scope) |
 
